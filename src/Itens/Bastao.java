@@ -1,4 +1,4 @@
-package Entidades.Itens;
+package Itens;
 
 public class Bastao extends Item {
     @Override

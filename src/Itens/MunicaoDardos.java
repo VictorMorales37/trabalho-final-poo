@@ -1,4 +1,4 @@
-package Entidades.Itens;
+package Itens;
 
 public class MunicaoDardos extends Item {
     @Override

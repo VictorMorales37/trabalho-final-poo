@@ -1,7 +1,7 @@
 package Entidades;
 
 import Entidades.Dinossauros.Compsognato;
-import Entidades.Itens.Item;
+import Itens.Item;
 import Util.Macros;
 
 public class Caixa extends Entidade {

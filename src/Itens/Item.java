@@ -1,4 +1,4 @@
-package Entidades.Itens;
+package Itens;
 
 public abstract class Item {
     public abstract String getNome();

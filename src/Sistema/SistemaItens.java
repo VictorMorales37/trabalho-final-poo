@@ -1,7 +1,7 @@
 package Sistema;
 
 import Entidades.*;
-import Entidades.Itens.*;
+import Itens.*;
 import Entidades.Dinossauros.Compsognato;
 import Entidades.Dinossauros.Dinossauro;
 
