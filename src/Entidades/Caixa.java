@@ -1,0 +1,43 @@
+package Entidades;
+
+import Entidades.Dinossauros.Compsognato;
+import Entidades.Itens.Item;
+import Util.Macros;
+
+public class Caixa extends Entidade {
+    private Item item;
+    private Compsognato compsognato;
+
+    public Caixa(Item item) {
+        this.item = item;
+    }
+
+    public Caixa(Compsognato compsognato) {
+        this.compsognato = compsognato;
+    }
+
+    public Item getItem() {
+        return item;
+    }
+
+    public Compsognato getCompsognato() {
+        return compsognato;
+    }
+
+    public Caixa copia() {
+        Caixa c;
+        if (item != null) {
+            c = new Caixa(item); 
+        } else {
+            c = new Caixa((Compsognato) (compsognato != null ? compsognato.copia() : null));
+        }
+
+        c.setPosicaoX(getPosicaoX());
+        c.setPosicaoY(getPosicaoY());
+
+        return c;
+    }
+
+    @Override
+    public char getSimbolo() { return Macros.SIMB_CAIXA; }
+}
