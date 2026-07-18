@@ -3,16 +3,16 @@ package Sistema;
 import Entidades.Personagens.Dinossauros.Dinossauro;
 import Entidades.Personagens.Dinossauros.Velociraptor;
 
-// Thread que move um dinossauro sozinho de tempos em tempos
+// Thread que move um dinossauro periodicamente
 public class ThreadDinossauro extends Thread {
 
-    private final MovimentadorDino movimentador;
+    private final Jogo jogo;
     private final Dinossauro dinossauro;
     private final int intervalo;
     private boolean rodando = true;
 
-    public ThreadDinossauro(MovimentadorDino movimentador, Dinossauro dinossauro) {
-        this.movimentador = movimentador;
+    public ThreadDinossauro(Jogo jogo, Dinossauro dinossauro) {
+        this.jogo = jogo;
         this.dinossauro = dinossauro;
         if (dinossauro instanceof Velociraptor) {
             this.intervalo = 1000;
@@ -36,7 +36,7 @@ public class ThreadDinossauro extends Thread {
             try {
                 Thread.sleep(intervalo);
                 if (!rodando) break;
-                movimentador.moverUmDinossauro(dinossauro);
+                jogo.moverUmDinossauro(dinossauro);
             } catch (InterruptedException e) {
                 break;
             }

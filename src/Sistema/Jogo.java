@@ -13,10 +13,12 @@ import Itens.Consumiveis.Consumivel;
 import Util.*;
 
 /**
- * Orquestra a partida. A lógica pesada fica em outras classes:
- * EstadoExecucao, GerenciadorThreads, GerenciadorEncontros, etc.
+ * Coordena a partida: movimento, encontros e fim de jogo.
+ * Combate fica em SistemaCombate; threads em GerenciadorThreads; GUI na pasta Gui.
  */
-public class Jogo implements MovimentadorDino {
+public class Jogo {
+
+    private static final long INTERVALO_JOGADOR_MS = 350;
 
     public final Random random;
     private final Menu menu;
@@ -27,13 +29,15 @@ public class Jogo implements MovimentadorDino {
     private final SistemaSalvamento sistemaSalvamento;
     private final LeitorDeInput leitorDeInput;
     private final CarregadorMapa carregadorMapa;
+    private final GerenciadorThreads gerenciadorThreads;
     private final ArrayList<Dinossauro> dinossauros;
     private final ArrayList<Caixa> caixas;
-
     private final boolean modoGui;
-    private final EstadoExecucao execucao;
-    private final GerenciadorThreads gerenciadorThreads;
-    private final GerenciadorEncontros gerenciadorEncontros;
+
+    private EstadoJogo estado = EstadoJogo.NOVO_JOGO;
+    private boolean pausado = false;
+    private boolean debugMode = false;
+    private long ultimoMovimentoJogador = 0;
 
     private Jogador jogadorInicial;
     private ArrayList<Dinossauro> dinossaurosIniciais;
@@ -54,24 +58,18 @@ public class Jogo implements MovimentadorDino {
         tabuleiro = new Tabuleiro(Macros.TAMANHO_TABULEIRO);
         sistemaCombate = new SistemaCombate(random);
         sistemaItens = new SistemaItens();
+        gerenciadorThreads = new GerenciadorThreads(this);
         jogador = new Jogador(Macros.SIMB_JOGADOR, Macros.SAUDE_JOGADOR, Macros.PERCEPCAO_INICIAL);
         dinossauros = new ArrayList<>();
         caixas = new ArrayList<>();
-
-        execucao = new EstadoExecucao();
-        gerenciadorThreads = new GerenciadorThreads(this);
-        gerenciadorEncontros = new GerenciadorEncontros(
-                sistemaCombate, sistemaItens, menu, leitorDeInput, tabuleiro,
-                execucao, gerenciadorThreads, modoGui);
     }
 
     public void setInterfaceGui(InterfaceGui interfaceGui) {
         this.interfaceGui = interfaceGui;
-        gerenciadorEncontros.setInterfaceGui(interfaceGui);
     }
 
     public EstadoJogo getEstado() {
-        return execucao.getEstado();
+        return estado;
     }
 
     public Tabuleiro getTabuleiro() {
@@ -83,7 +81,7 @@ public class Jogo implements MovimentadorDino {
     }
 
     public boolean isDebugMode() {
-        return execucao.isDebug();
+        return debugMode;
     }
 
     public SistemaCombate getSistemaCombate() {
@@ -100,7 +98,7 @@ public class Jogo implements MovimentadorDino {
         carregadorMapa.carregar(Macros.PASTA_MAPAS + "mapa" + numeroMapa + ".txt",
                 tabuleiro, jogador, dinossauros, caixas);
         finalizarCarregamentoPartida();
-        execucao.resetarParaPartida();
+        resetarEstadoPartida();
         if (modoGui) gerenciadorThreads.iniciarTodas(dinossauros);
         atualizarGui();
     }
@@ -108,7 +106,7 @@ public class Jogo implements MovimentadorDino {
     public void carregarPartida() {
         gerenciadorThreads.pararTodas();
         carregarSave();
-        execucao.resetarParaPartida();
+        resetarEstadoPartida();
         if (modoGui) gerenciadorThreads.iniciarTodas(dinossauros);
         atualizarGui();
     }
@@ -119,8 +117,8 @@ public class Jogo implements MovimentadorDino {
     }
 
     public void alternarDebug() {
-        execucao.alternarDebug();
-        menu.mensagem(execucao.isDebug() ? "MODO DEBUG ATIVADO" : "MODO DEBUG DESATIVADO");
+        debugMode = !debugMode;
+        menu.mensagem(debugMode ? "MODO DEBUG ATIVADO" : "MODO DEBUG DESATIVADO");
         atualizarGui();
     }
 
@@ -140,45 +138,43 @@ public class Jogo implements MovimentadorDino {
         Direcao dirCombate = null;
 
         synchronized (this) {
-            if (!execucao.podeJogar()) return;
-            if (!execucao.cooldownPronto()) return;
-            execucao.registrarMovimentoJogador();
+            if (!podeJogar()) return;
+            if (!cooldownPronto()) return;
+            ultimoMovimentoJogador = System.currentTimeMillis();
 
             if (dinossauros.isEmpty()) {
-                gerenciadorEncontros.tratarVitoria();
+                tratarVitoria();
                 return;
             }
 
-            ResultadoMovimento resMovimento = jogador.mover(direcao, tabuleiro);
-            menu.avisoMovimento(resMovimento);
+            ResultadoMovimento res = jogador.mover(direcao, tabuleiro);
+            menu.avisoMovimento(res);
 
-            if (resMovimento == ResultadoMovimento.BLOQUEADO) {
+            if (res == ResultadoMovimento.BLOQUEADO) {
                 atualizarGui();
                 return;
             }
 
-            if (resMovimento == ResultadoMovimento.ENCONTROU_CAIXA) {
-                Compsognato surpresa = gerenciadorEncontros.abrirCaixa(jogador, caixas, dinossauros);
+            if (res == ResultadoMovimento.ENCONTROU_CAIXA) {
+                Compsognato surpresa = abrirCaixa();
                 if (surpresa != null) {
                     dinoCombate = surpresa;
                     dinoAtacouPrimeiro = true;
-                    execucao.setPausado(true);
+                    pausado = true;
                 }
-            } else if (resMovimento != ResultadoMovimento.LIVRE) {
-                Dinossauro d = gerenciadorEncontros.acharDinoNaDirecao(jogador, direcao, dinossauros);
+            } else if (res != ResultadoMovimento.LIVRE) {
+                Dinossauro d = acharDinoNaDirecao(direcao);
                 if (d != null) {
                     dinoCombate = d;
                     dirCombate = direcao;
-                    execucao.setPausado(true);
+                    pausado = true;
                 }
             }
 
             tabuleiro.atualizar(jogador, dinossauros, caixas);
-
             if (!modoGui && dinoCombate == null) {
                 moverDinossaurosConsole();
             }
-
             atualizarGui();
         }
 
@@ -187,19 +183,18 @@ public class Jogo implements MovimentadorDino {
         }
     }
 
-    @Override
     public void moverUmDinossauro(Dinossauro d) {
         boolean encontrouJogador = false;
 
         synchronized (this) {
-            if (!execucao.podeJogar()) return;
+            if (!podeJogar()) return;
             if (!dinossauros.contains(d) || !d.estaVivo()) return;
 
             encontrouJogador = d.mover(jogador, tabuleiro, random);
             tabuleiro.atualizar(jogador, dinossauros, caixas);
 
             if (encontrouJogador) {
-                execucao.setPausado(true);
+                pausado = true;
                 menu.avisoDinossauroEncontrou(d);
             }
             atualizarGui();
@@ -210,12 +205,10 @@ public class Jogo implements MovimentadorDino {
         }
     }
 
-    // combate fora do synchronized + finally garante que o jogador não fica preso
     private void finalizarEncontro(Dinossauro dino, boolean dinoAtacouPrimeiro, Direcao dirCombate) {
         ResultadoCombate res = null;
         try {
-            res = gerenciadorEncontros.executarCombate(
-                    jogador, dino, dinoAtacouPrimeiro, dinossauros, caixas);
+            res = executarCombate(dino, dinoAtacouPrimeiro);
         } finally {
             synchronized (this) {
                 if (res == ResultadoCombate.VENCEU && dirCombate != null && jogador.estaVivo()) {
@@ -226,18 +219,130 @@ public class Jogo implements MovimentadorDino {
                 if (res == ResultadoCombate.FUGIU && dinossauros.contains(dino)) {
                     gerenciadorThreads.iniciarUma(dino);
                 }
-                // ponto crítico: sempre libera a pausa se ainda há o que jogar
-                gerenciadorEncontros.liberarPausaSeJogavel(jogador, dinossauros);
-                gerenciadorEncontros.verificarVitoria(dinossauros);
+                liberarPausaSeJogavel();
+                if (dinossauros.isEmpty() && estado == EstadoJogo.CONTINUAR) {
+                    tratarVitoria();
+                }
                 atualizarGui();
             }
         }
     }
 
+    private Compsognato abrirCaixa() {
+        Compsognato surpresa = sistemaItens.processarCaixaNaPosicao(jogador, caixas);
+        tabuleiro.atualizar(jogador, dinossauros, caixas);
+        if (surpresa != null) {
+            menu.mensagem("Cuidado! Um compsognato estava atrás da caixa!");
+            dinossauros.add(surpresa);
+            tabuleiro.atualizar(jogador, dinossauros, caixas);
+        } else {
+            menu.mensagem("Você encontrou um item na caixa!");
+        }
+        return surpresa;
+    }
+
+    private Dinossauro acharDinoNaDirecao(Direcao direcao) {
+        int x = jogador.getPosicaoX() + direcao.dx;
+        int y = jogador.getPosicaoY() + direcao.dy;
+        for (Dinossauro d : dinossauros) {
+            if (d.getPosicaoX() == x && d.getPosicaoY() == y) return d;
+        }
+        return null;
+    }
+
+    private ResultadoCombate executarCombate(Dinossauro dino, boolean dinoAtacouPrimeiro) {
+        if (dinoAtacouPrimeiro) {
+            if (!sistemaCombate.passouTestePercepcao(jogador)) {
+                jogador.setSaude(jogador.getSaude() - dino.getDanoAtaque());
+                menu.mensagem("O dinossauro te atacou! -" + dino.getDanoAtaque() + " de saúde.");
+                if (jogador.getSaude() <= 0) {
+                    tratarDerrota();
+                    return ResultadoCombate.PERDEU;
+                }
+            } else {
+                menu.mensagem("Você desviou do ataque inicial!");
+            }
+        }
+
+        if (interfaceGui != null) interfaceGui.prepararCombate(jogador, dino);
+        ResultadoCombate res = sistemaCombate.combate(jogador, dino, menu, leitorDeInput, tabuleiro);
+        if (interfaceGui != null) interfaceGui.finalizarCombate();
+
+        if (res == null) {
+            res = dino.estaVivo() ? ResultadoCombate.FUGIU : ResultadoCombate.VENCEU;
+        }
+
+        if (res == ResultadoCombate.PERDEU) {
+            tratarDerrota();
+        } else if (res == ResultadoCombate.VENCEU) {
+            dinossauros.remove(dino);
+            gerenciadorThreads.pararUma(dino);
+            tabuleiro.atualizar(jogador, dinossauros, caixas);
+        } else if (res == ResultadoCombate.FUGIU) {
+            separarAposFuga(dino);
+        }
+        return res;
+    }
+
+    private void separarAposFuga(Dinossauro d) {
+        if (d.getPosicaoX() != jogador.getPosicaoX() || d.getPosicaoY() != jogador.getPosicaoY()) {
+            tabuleiro.atualizar(jogador, dinossauros, caixas);
+            return;
+        }
+        Direcao[] dirs = {Direcao.CIMA, Direcao.BAIXO, Direcao.ESQUERDA, Direcao.DIREITA};
+        for (Direcao dir : dirs) {
+            int nx = d.getPosicaoX() + dir.dx;
+            int ny = d.getPosicaoY() + dir.dy;
+            if (d.verificaMovimento(nx, ny, tabuleiro) == ResultadoMovimento.LIVRE) {
+                d.setPosicaoX(nx);
+                d.setPosicaoY(ny);
+                break;
+            }
+        }
+        tabuleiro.atualizar(jogador, dinossauros, caixas);
+    }
+
+    private void tratarVitoria() {
+        menu.mensagemVitoria();
+        estado = EstadoJogo.VITORIA;
+        pausado = true;
+        gerenciadorThreads.pararTodas();
+        if (interfaceGui != null) interfaceGui.onVitoria();
+    }
+
+    private void tratarDerrota() {
+        menu.mensagemDerrota();
+        estado = EstadoJogo.DERROTA;
+        pausado = true;
+        gerenciadorThreads.pararTodas();
+        if (modoGui && interfaceGui != null) interfaceGui.onDerrota();
+    }
+
+    private void liberarPausaSeJogavel() {
+        if (estado == EstadoJogo.CONTINUAR && jogador.estaVivo() && !dinossauros.isEmpty()) {
+            pausado = false;
+        }
+    }
+
+    private boolean podeJogar() {
+        return estado == EstadoJogo.CONTINUAR && !pausado;
+    }
+
+    private boolean cooldownPronto() {
+        return System.currentTimeMillis() - ultimoMovimentoJogador >= INTERVALO_JOGADOR_MS;
+    }
+
+    private void resetarEstadoPartida() {
+        estado = EstadoJogo.CONTINUAR;
+        pausado = false;
+        debugMode = false;
+        ultimoMovimentoJogador = 0;
+    }
+
     public void reiniciarPartida() {
         gerenciadorThreads.pararTodas();
         reiniciarPartidaInterno();
-        execucao.resetarParaPartida();
+        resetarEstadoPartida();
         if (modoGui) gerenciadorThreads.iniciarTodas(dinossauros);
         atualizarGui();
     }
@@ -267,7 +372,7 @@ public class Jogo implements MovimentadorDino {
     }
 
     public void iniciarJogo() {
-        if (execucao.getEstado() == EstadoJogo.REINICIAR) {
+        if (estado == EstadoJogo.REINICIAR) {
             reiniciarPartidaInterno();
         } else {
             boolean partidaPronta = false;
@@ -291,25 +396,25 @@ public class Jogo implements MovimentadorDino {
                     carregarSave();
                     partidaPronta = true;
                 } else {
-                    execucao.setEstado(EstadoJogo.SAIR);
+                    estado = EstadoJogo.SAIR;
                     return;
                 }
             }
         }
 
-        execucao.resetarParaPartida();
+        resetarEstadoPartida();
         loopJogo();
     }
 
     private void loopJogo() {
-        while (execucao.getEstado() == EstadoJogo.CONTINUAR) {
+        while (estado == EstadoJogo.CONTINUAR) {
             menu.menuPrincipal();
             int inputOpcoes = leitorDeInput.lerInput(1, 5);
 
             if (inputOpcoes == 1) loopMovimento();
             else if (inputOpcoes == 2) usarKitMedico();
             else if (inputOpcoes == 3) {
-                execucao.setDebug(true);
+                debugMode = true;
                 menu.mensagem("MODO DEBUG ATIVADO");
             }
             else if (inputOpcoes == 4) salvarPartida();
@@ -321,11 +426,11 @@ public class Jogo implements MovimentadorDino {
         menu.menuSaida();
         int inputOpcoes = leitorDeInput.lerInput(1, 3);
 
-        if (inputOpcoes == 1) execucao.setEstado(EstadoJogo.REINICIAR);
-        else if (inputOpcoes == 2) execucao.setEstado(EstadoJogo.NOVO_JOGO);
+        if (inputOpcoes == 1) estado = EstadoJogo.REINICIAR;
+        else if (inputOpcoes == 2) estado = EstadoJogo.NOVO_JOGO;
         else {
             menu.mensagemSaida();
-            execucao.setEstado(EstadoJogo.SAIR);
+            estado = EstadoJogo.SAIR;
         }
     }
 
@@ -349,15 +454,15 @@ public class Jogo implements MovimentadorDino {
 
     private void loopMovimento() {
         int inputMovimento = 0;
-        while (inputMovimento != 5 && execucao.getEstado() == EstadoJogo.CONTINUAR) {
+        while (inputMovimento != 5 && estado == EstadoJogo.CONTINUAR) {
             if (dinossauros.isEmpty()) {
-                gerenciadorEncontros.tratarVitoria();
+                tratarVitoria();
                 sairDoJogo();
                 return;
             }
 
             menu.statusJogador(jogador);
-            if (execucao.isDebug()) menu.mostrarTabuleiroDEBUG(tabuleiro);
+            if (debugMode) menu.mostrarTabuleiroDEBUG(tabuleiro);
             else menu.mostrarTabuleiroJogador(tabuleiro, jogador);
             menu.opcoesMovimento();
 
@@ -365,7 +470,7 @@ public class Jogo implements MovimentadorDino {
             if (inputMovimento == 5) continue;
 
             executarMovimento(leitorDeInput.lerDirecao(inputMovimento));
-            if (execucao.getEstado() != EstadoJogo.CONTINUAR) return;
+            if (estado != EstadoJogo.CONTINUAR) return;
         }
     }
 
@@ -375,8 +480,8 @@ public class Jogo implements MovimentadorDino {
             tabuleiro.atualizar(jogador, dinossauros, caixas);
             if (encontrou) {
                 menu.avisoDinossauroEncontrou(d);
-                gerenciadorEncontros.executarCombate(jogador, d, true, dinossauros, caixas);
-                if (execucao.getEstado() != EstadoJogo.CONTINUAR) return;
+                executarCombate(d, true);
+                if (estado != EstadoJogo.CONTINUAR) return;
             }
         }
     }

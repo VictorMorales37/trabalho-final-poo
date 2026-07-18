@@ -1,18 +1,17 @@
 package Sistema;
 
 import Entidades.Personagens.Dinossauros.Dinossauro;
-import Entidades.Personagens.Dinossauros.Velociraptor;
 
 import java.util.ArrayList;
 
-// Cuida só das threads dos dinossauros
+// Cuida das threads de movimento dos dinossauros
 public class GerenciadorThreads {
 
     private final ArrayList<ThreadDinossauro> threads = new ArrayList<>();
-    private final MovimentadorDino movimentador;
+    private final Jogo jogo;
 
-    public GerenciadorThreads(MovimentadorDino movimentador) {
-        this.movimentador = movimentador;
+    public GerenciadorThreads(Jogo jogo) {
+        this.jogo = jogo;
     }
 
     public void iniciarTodas(ArrayList<Dinossauro> dinossauros) {
@@ -27,7 +26,7 @@ public class GerenciadorThreads {
         for (ThreadDinossauro t : threads) {
             if (t.getDinossauro() == d) return;
         }
-        ThreadDinossauro t = new ThreadDinossauro(movimentador, d);
+        ThreadDinossauro t = new ThreadDinossauro(jogo, d);
         threads.add(t);
         t.start();
     }
