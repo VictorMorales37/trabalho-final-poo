@@ -9,6 +9,7 @@ import Itens.Consumiveis.Consumivel;
 import Util.Direcao;
 import Util.Macros;
 import Util.ResultadoCombate;
+import Util.ResultadoMovimento;
 
 import java.util.Random;
 
@@ -40,9 +41,14 @@ public class SistemaCombate {
             int input = leitorDeInput.lerInput(1, 5);
 
             if (input == 5) {
-                fugir(jogador, tabuleiro);
-                menu.mensagem("Voce fugiu");
-                return ResultadoCombate.FUGIU;
+                boolean fugiu = fugir(jogador, tabuleiro);
+                if (fugiu) {
+                    menu.mensagem("Voce fugiu");
+                    return ResultadoCombate.FUGIU;
+                } else {
+                    menu.mensagem("Não foi possível fugir!");
+                    continue;
+                }
             }
 
             if (input == 4) {
@@ -122,7 +128,7 @@ public class SistemaCombate {
                 return ResultadoCombate.PERDEU;
             }
         }
-        return null;
+        return ResultadoCombate.VENCEU;
     }
 
     public boolean passouTestePercepcao(Jogador j) {
@@ -130,17 +136,25 @@ public class SistemaCombate {
         return dado <= j.getPercepcao();
     }
 
-    public void fugir(Jogador jogador, Tabuleiro tabuleiro) {
-        for (int tentativas = 0; tentativas < 4; tentativas++) {
-            int val = random.nextInt(4);
-            Direcao dir = switch (val) {
-                case 0 -> Direcao.CIMA;
-                case 1 -> Direcao.BAIXO;
-                case 2 -> Direcao.DIREITA;
-                case 3 -> Direcao.ESQUERDA;
-                default -> Direcao.INVALIDA;
-            };
-            jogador.mover(dir, tabuleiro);
+    // tenta andar para uma célula livre (não fica na mesma do dino)
+    public boolean fugir(Jogador jogador, Tabuleiro tabuleiro) {
+        Direcao[] dirs = {Direcao.CIMA, Direcao.BAIXO, Direcao.ESQUERDA, Direcao.DIREITA};
+        for (int i = 0; i < dirs.length; i++) {
+            int j = random.nextInt(dirs.length);
+            Direcao tmp = dirs[i];
+            dirs[i] = dirs[j];
+            dirs[j] = tmp;
         }
+
+        for (Direcao dir : dirs) {
+            int novoX = jogador.getPosicaoX() + dir.dx;
+            int novoY = jogador.getPosicaoY() + dir.dy;
+            if (jogador.verificaMovimento(novoX, novoY, tabuleiro) == ResultadoMovimento.LIVRE) {
+                jogador.setPosicaoX(novoX);
+                jogador.setPosicaoY(novoY);
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -32,6 +32,10 @@ public class Jogo {
     private boolean debugMode = false;
     private final boolean modoGui;
     private InterfaceGui interfaceGui;
+    private final ArrayList<ThreadDinossauro> threadsDinos = new ArrayList<>();
+    private boolean pausado = false; // true durante combate / diálogos
+    private long ultimoMovimentoJogador = 0;
+    private static final long INTERVALO_JOGADOR_MS = 350; // evita atravessar o mapa segurando a tecla
 
     public Jogo() {
         this(new Menu(), new LeitorDeInput(new Scanner(System.in)), false);
@@ -77,6 +81,7 @@ public class Jogo {
     }
 
     public void iniciarNovoJogo(int dificuldade, int numeroMapa) {
+        pararThreadsDinossauros();
         jogador = new Jogador(Macros.SIMB_JOGADOR, Macros.SAUDE_JOGADOR, Macros.PERCEPCAO_INICIAL);
         jogador.setPercepcao(4 - dificuldade);
         dinossauros.clear();
@@ -87,11 +92,16 @@ public class Jogo {
         finalizarCarregamentoPartida();
         debugMode = false;
         estado = EstadoJogo.CONTINUAR;
+        pausado = false;
+        if (modoGui) iniciarThreadsDinossauros();
         if (interfaceGui != null) interfaceGui.atualizar();
     }
 
     public void carregarPartida() {
+        pararThreadsDinossauros();
         carregarSave();
+        pausado = false;
+        if (modoGui) iniciarThreadsDinossauros();
         if (interfaceGui != null) interfaceGui.atualizar();
     }
 
@@ -118,35 +128,169 @@ public class Jogo {
         if (interfaceGui != null) interfaceGui.atualizar();
     }
 
+    // movimento do jogador (chamado pelas ThreadJogador)
     public void executarMovimento(Direcao direcao) {
-        if (estado != EstadoJogo.CONTINUAR) return;
+        Dinossauro dinoCombate = null;
+        boolean dinoAtacouPrimeiro = false;
+        Direcao dirCombate = null;
 
-        if (dinossauros.isEmpty()) {
-            menu.mensagemVitoria();
-            if (interfaceGui != null) interfaceGui.onVitoria();
-            return;
-        }
+        synchronized (this) {
+            if (estado != EstadoJogo.CONTINUAR || pausado) return;
 
-        ResultadoMovimento resMovimento = jogador.mover(direcao, tabuleiro);
-        menu.avisoMovimento(resMovimento);
+            long agora = System.currentTimeMillis();
+            if (agora - ultimoMovimentoJogador < INTERVALO_JOGADOR_MS) return;
+            ultimoMovimentoJogador = agora;
 
-        if (resMovimento == ResultadoMovimento.BLOQUEADO) {
+            if (dinossauros.isEmpty()) {
+                menu.mensagemVitoria();
+                pausado = true;
+                pararThreadsDinossauros();
+                if (interfaceGui != null) interfaceGui.onVitoria();
+                return;
+            }
+
+            ResultadoMovimento resMovimento = jogador.mover(direcao, tabuleiro);
+            menu.avisoMovimento(resMovimento);
+
+            if (resMovimento == ResultadoMovimento.BLOQUEADO) {
+                if (interfaceGui != null) interfaceGui.atualizar();
+                return;
+            }
+
+            if (resMovimento == ResultadoMovimento.ENCONTROU_CAIXA) {
+                Compsognato surpresa = sistemaItens.processarCaixaNaPosicao(jogador, caixas);
+                tabuleiro.atualizar(jogador, dinossauros, caixas);
+                if (surpresa != null) {
+                    menu.mensagem("Cuidado! Um compsognato estava atrás da caixa!");
+                    dinossauros.add(surpresa);
+                    tabuleiro.atualizar(jogador, dinossauros, caixas);
+                    dinoCombate = surpresa;
+                    dinoAtacouPrimeiro = true;
+                    pausado = true;
+                } else {
+                    menu.mensagem("Você encontrou um item na caixa!");
+                }
+            } else if (resMovimento != ResultadoMovimento.LIVRE) {
+                for (Dinossauro d : dinossauros) {
+                    if (d.getPosicaoX() == jogador.getPosicaoX() + direcao.dx
+                            && d.getPosicaoY() == jogador.getPosicaoY() + direcao.dy) {
+                        dinoCombate = d;
+                        dirCombate = direcao;
+                        pausado = true;
+                        break;
+                    }
+                }
+            }
+
+            tabuleiro.atualizar(jogador, dinossauros, caixas);
+
+            if (!modoGui && dinoCombate == null) {
+                moverDinossauros();
+            }
+
             if (interfaceGui != null) interfaceGui.atualizar();
-            return;
         }
 
-        processarResultadoMovimento(resMovimento, direcao);
-        if (!modoGui && estado != EstadoJogo.CONTINUAR) return;
+        // combate fora do synchronized para não travar outras threads
+        if (dinoCombate != null) {
+            ResultadoCombate res = processarResultadoCombate(dinoCombate, dinoAtacouPrimeiro, dirCombate);
+            synchronized (this) {
+                if (res == ResultadoCombate.VENCEU && dirCombate != null) {
+                    tabuleiro.atualizar(jogador, dinossauros, caixas);
+                    jogador.mover(dirCombate, tabuleiro);
+                }
+                // se fugiu / sobreviveu o dino da caixa, inicia a thread dele
+                if (res != ResultadoCombate.VENCEU && res != ResultadoCombate.PERDEU
+                        && dinossauros.contains(dinoCombate)) {
+                    iniciarThreadDinossauro(dinoCombate);
+                }
+                tabuleiro.atualizar(jogador, dinossauros, caixas);
+                if (res != ResultadoCombate.PERDEU && estado == EstadoJogo.CONTINUAR) {
+                    pausado = false;
+                }
+                if (dinossauros.isEmpty() && estado == EstadoJogo.CONTINUAR) {
+                    menu.mensagemVitoria();
+                    pausado = true;
+                    pararThreadsDinossauros();
+                    if (interfaceGui != null) interfaceGui.onVitoria();
+                }
+                if (interfaceGui != null) interfaceGui.atualizar();
+            }
+        }
+    }
 
-        tabuleiro.atualizar(jogador, dinossauros, caixas);
-        moverDinossauros();
+    // chamado pela ThreadDinossauro
+    public void moverUmDinossauro(Dinossauro d) {
+        boolean encontrouJogador = false;
 
-        if (interfaceGui != null) interfaceGui.atualizar();
+        synchronized (this) {
+            if (estado != EstadoJogo.CONTINUAR || pausado) return;
+            if (!dinossauros.contains(d) || !d.estaVivo()) return;
+
+            encontrouJogador = d.mover(jogador, tabuleiro, random);
+            tabuleiro.atualizar(jogador, dinossauros, caixas);
+
+            if (encontrouJogador) {
+                pausado = true;
+                menu.avisoDinossauroEncontrou(d);
+            }
+
+            if (interfaceGui != null) interfaceGui.atualizar();
+        }
+
+        if (encontrouJogador) {
+            processarResultadoCombate(d, true, null);
+            synchronized (this) {
+                tabuleiro.atualizar(jogador, dinossauros, caixas);
+                if (jogador.estaVivo() && estado == EstadoJogo.CONTINUAR) {
+                    pausado = false;
+                }
+                if (dinossauros.isEmpty() && estado == EstadoJogo.CONTINUAR) {
+                    menu.mensagemVitoria();
+                    pausado = true;
+                    pararThreadsDinossauros();
+                    if (interfaceGui != null) interfaceGui.onVitoria();
+                }
+                if (interfaceGui != null) interfaceGui.atualizar();
+            }
+        }
     }
 
     public void reiniciarPartida() {
+        pararThreadsDinossauros();
         reiniciarPartidaInterno();
+        pausado = false;
+        if (modoGui) iniciarThreadsDinossauros();
         if (interfaceGui != null) interfaceGui.atualizar();
+    }
+
+    public void iniciarThreadsDinossauros() {
+        pararThreadsDinossauros();
+        for (Dinossauro d : dinossauros) {
+            // T-Rex tem velocidade 0 e não se move
+            if (d.getVelocidade() <= 0) continue;
+            ThreadDinossauro t = new ThreadDinossauro(this, d);
+            threadsDinos.add(t);
+            t.start();
+        }
+    }
+
+    public void pararThreadsDinossauros() {
+        for (ThreadDinossauro t : threadsDinos) {
+            t.parar();
+        }
+        threadsDinos.clear();
+    }
+
+    // inicia thread de um dinossaur que surgiu no meio do jogo (compsognato)
+    private void iniciarThreadDinossauro(Dinossauro d) {
+        if (!modoGui || d.getVelocidade() <= 0) return;
+        for (ThreadDinossauro t : threadsDinos) {
+            if (t.getDinossauro() == d) return; // já tem thread
+        }
+        ThreadDinossauro t = new ThreadDinossauro(this, d);
+        threadsDinos.add(t);
+        t.start();
     }
 
     private void setDificuldade() {
@@ -300,9 +444,14 @@ public class Jogo {
 
     private void processarCaixa() {
         Compsognato surpresa = sistemaItens.processarCaixaNaPosicao(jogador, caixas);
+        tabuleiro.atualizar(jogador, dinossauros, caixas);
         if (surpresa != null) {
             dinossauros.add(surpresa);
+            tabuleiro.atualizar(jogador, dinossauros, caixas);
             processarResultadoCombate(surpresa, true, null);
+            if (dinossauros.contains(surpresa)) {
+                iniciarThreadDinossauro(surpresa);
+            }
         }
     }
 
@@ -342,12 +491,50 @@ public class Jogo {
         if (res == ResultadoCombate.PERDEU) {
             tratarDerrota();
         }
-        if (res == ResultadoCombate.VENCEU) dinossauros.remove(d);
+        if (res == ResultadoCombate.VENCEU) {
+            synchronized (this) {
+                dinossauros.remove(d);
+                pararThreadDoDino(d);
+            }
+        }
+        if (res == ResultadoCombate.FUGIU) {
+            // garante que jogador e dino não ficam na mesma célula
+            separarAposFuga(d);
+        }
         return res;
+    }
+
+    // se ainda estão juntos após fugir, empurra o dino para o lado
+    private void separarAposFuga(Dinossauro d) {
+        if (d.getPosicaoX() != jogador.getPosicaoX() || d.getPosicaoY() != jogador.getPosicaoY()) {
+            return;
+        }
+        Direcao[] dirs = {Direcao.CIMA, Direcao.BAIXO, Direcao.ESQUERDA, Direcao.DIREITA};
+        for (Direcao dir : dirs) {
+            int nx = d.getPosicaoX() + dir.dx;
+            int ny = d.getPosicaoY() + dir.dy;
+            if (d.verificaMovimento(nx, ny, tabuleiro) == ResultadoMovimento.LIVRE) {
+                d.setPosicaoX(nx);
+                d.setPosicaoY(ny);
+                return;
+            }
+        }
+    }
+
+    private void pararThreadDoDino(Dinossauro d) {
+        for (int i = 0; i < threadsDinos.size(); i++) {
+            if (threadsDinos.get(i).getDinossauro() == d) {
+                threadsDinos.get(i).parar();
+                threadsDinos.remove(i);
+                break;
+            }
+        }
     }
 
     private void tratarDerrota() {
         menu.mensagemDerrota();
+        pararThreadsDinossauros();
+        pausado = true;
         if (modoGui && interfaceGui != null) {
             interfaceGui.onDerrota();
         } else {

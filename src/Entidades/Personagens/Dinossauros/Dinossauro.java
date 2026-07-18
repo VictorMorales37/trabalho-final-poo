@@ -23,10 +23,10 @@ public abstract class Dinossauro extends Personagem {
     @Override
     public abstract char getSimbolo();
 
-    public int getVelocidade() { 
-        return velocidade; 
+    public int getVelocidade() {
+        return velocidade;
     }
-    
+
     public boolean podeSerAtacadoSemArma() {
         return true;
     }
@@ -51,26 +51,35 @@ public abstract class Dinossauro extends Personagem {
     }
 
     public boolean mover(Jogador jogador, Tabuleiro tabuleiro, Random random) {
-        for (int i = 0; i < getVelocidade(); i++) {
-            int novoX;
-            int novoY;
-            int tentativas = 0;
-            do {
-                Direcao direcaoAleatoria = direcaoAleatoria(random);
-                novoX = getPosicaoX() + direcaoAleatoria.dx;
-                novoY = getPosicaoY() + direcaoAleatoria.dy;
-                tentativas++;
-            } while ((verificaMovimento(novoX, novoY, tabuleiro) != ResultadoMovimento.LIVRE &&
-                    !(novoX == jogador.getPosicaoX() && novoY == jogador.getPosicaoY()))
-                    && tentativas < 4);
+        // já está na mesma célula = encontrou
+        if (getPosicaoX() == jogador.getPosicaoX() && getPosicaoY() == jogador.getPosicaoY()) {
+            return true;
+        }
 
-            if (tentativas >= 4) return false;
+        for (int i = 0; i < getVelocidade(); i++) {
+            int novoX = getPosicaoX();
+            int novoY = getPosicaoY();
+            Direcao escolhida = Direcao.INVALIDA;
+            int tentativas = 0;
+            boolean valido = false;
+
+            do {
+                escolhida = direcaoAleatoria(random);
+                novoX = getPosicaoX() + escolhida.dx;
+                novoY = getPosicaoY() + escolhida.dy;
+                tentativas++;
+
+                boolean noJogador = novoX == jogador.getPosicaoX() && novoY == jogador.getPosicaoY();
+                boolean livre = verificaMovimento(novoX, novoY, tabuleiro) == ResultadoMovimento.LIVRE;
+                valido = livre || noJogador;
+            } while (!valido && tentativas < 4);
+
+            if (!valido) return false;
 
             setPosicaoX(novoX);
             setPosicaoY(novoY);
 
-            if (getPosicaoX() == jogador.getPosicaoX() &&
-                    getPosicaoY() == jogador.getPosicaoY()) {
+            if (getPosicaoX() == jogador.getPosicaoX() && getPosicaoY() == jogador.getPosicaoY()) {
                 return true;
             }
         }

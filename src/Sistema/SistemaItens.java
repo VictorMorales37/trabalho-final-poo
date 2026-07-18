@@ -35,11 +35,9 @@ public class SistemaItens {
     private Compsognato abrirCaixa(Jogador jogador, Caixa caixa) {
         if (caixa.getItem() != null) {
             Item item = caixa.getItem();
-            System.out.println("Você encontrou " + item.getNome());
             jogador.receberItem(item);
             return null;
         } else {
-            System.out.println("Cuidado! Um compsognato estava atrás da caixa");
             return caixa.getCompsognato();
         }
     }

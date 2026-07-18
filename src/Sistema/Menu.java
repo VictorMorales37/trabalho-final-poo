@@ -100,6 +100,8 @@ public class Menu {
     public void avisoMovimento(ResultadoMovimento resultado) {
         if (resultado == ResultadoMovimento.BLOQUEADO) {
             mensagem("Movimento não permitido");
+        } else if (resultado == ResultadoMovimento.ENCONTROU_CAIXA) {
+            mensagem("Você abriu uma caixa!");
         } else if (resultado == ResultadoMovimento.ENCONTROU_COMPSOGNATO) {
             mensagem("Encontrou compsognato!");
         } else if (resultado == ResultadoMovimento.ENCONTROU_TROODONTE) {

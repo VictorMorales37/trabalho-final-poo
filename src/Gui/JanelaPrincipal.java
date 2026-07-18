@@ -5,11 +5,13 @@ import Entidades.Personagens.Jogador;
 import Itens.Item;
 import Sistema.InterfaceGui;
 import Sistema.Jogo;
+import Sistema.ThreadJogador;
 import Util.Direcao;
 import Util.Macros;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 
 public class JanelaPrincipal extends JFrame implements InterfaceGui {
 
@@ -35,6 +37,7 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
         setLayout(new BorderLayout());
         criarMenu();
         criarTela();
+        configurarTeclado();
         pack();
         setMinimumSize(new Dimension(750, 600));
         setLocationRelativeTo(null);
@@ -51,7 +54,10 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
         JMenuItem carregar = new JMenuItem("Carregar Jogo");
         carregar.addActionListener(e -> executar(() -> jogo.carregarPartida()));
         JMenuItem sair = new JMenuItem("Saída");
-        sair.addActionListener(e -> System.exit(0));
+        sair.addActionListener(e -> {
+            jogo.pararThreadsDinossauros();
+            System.exit(0);
+        });
         arquivo.add(salvar);
         arquivo.add(carregar);
         arquivo.add(sair);
@@ -100,16 +106,17 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
         lateral.add(new JScrollPane(new JList<>(listaItens)));
         lateral.add(Box.createVerticalStrut(15));
 
-        lateral.add(new JLabel("Movimento"));
-        lateral.add(criarBotaoMovimento("↑", Direcao.CIMA));
+        lateral.add(new JLabel("Movimento (WASD)"));
+        lateral.add(criarBotaoMovimento("↑ / W", Direcao.CIMA));
         JPanel meio = new JPanel(new FlowLayout());
         meio.setBackground(new Color(210, 180, 140));
-        meio.add(criarBotaoMovimento("←", Direcao.ESQUERDA));
-        meio.add(criarBotaoMovimento("→", Direcao.DIREITA));
+        meio.add(criarBotaoMovimento("← / A", Direcao.ESQUERDA));
+        meio.add(criarBotaoMovimento("→ / D", Direcao.DIREITA));
         lateral.add(meio);
-        lateral.add(criarBotaoMovimento("↓", Direcao.BAIXO));
+        lateral.add(criarBotaoMovimento("↓ / S", Direcao.BAIXO));
 
         JButton btnCurar = new JButton("Kit médico");
+        btnCurar.setFocusable(false);
         btnCurar.addActionListener(e -> executar(() -> jogo.usarKitMedico()));
         lateral.add(Box.createVerticalStrut(10));
         lateral.add(btnCurar);
@@ -118,13 +125,44 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
 
         JTextArea mensagens = new JTextArea(3, 40);
         mensagens.setEditable(false);
+        mensagens.setFocusable(false);
         menuGui.setArea(mensagens);
         add(new JScrollPane(mensagens), BorderLayout.SOUTH);
     }
 
+    // WASD cria uma ThreadJogador para cada tecla
+    private void configurarTeclado() {
+        setFocusable(true);
+        // KeyboardFocusManager pega as teclas mesmo se o foco não estiver na janela
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            if (e.getID() != KeyEvent.KEY_PRESSED) return false;
+            // não move durante combate
+            if (dialogoCombate != null && dialogoCombate.isVisible()) return false;
+
+            Direcao dir = null;
+            int tecla = e.getKeyCode();
+            if (tecla == KeyEvent.VK_W || tecla == KeyEvent.VK_UP) {
+                dir = Direcao.CIMA;
+            } else if (tecla == KeyEvent.VK_S || tecla == KeyEvent.VK_DOWN) {
+                dir = Direcao.BAIXO;
+            } else if (tecla == KeyEvent.VK_A || tecla == KeyEvent.VK_LEFT) {
+                dir = Direcao.ESQUERDA;
+            } else if (tecla == KeyEvent.VK_D || tecla == KeyEvent.VK_RIGHT) {
+                dir = Direcao.DIREITA;
+            }
+
+            if (dir != null) {
+                new ThreadJogador(jogo, dir).start();
+                return true;
+            }
+            return false;
+        });
+    }
+
     private JButton criarBotaoMovimento(String texto, Direcao dir) {
         JButton btn = new JButton(texto);
-        btn.addActionListener(e -> executar(() -> jogo.executarMovimento(dir)));
+        btn.setFocusable(false); // para o teclado continuar na janela
+        btn.addActionListener(e -> new ThreadJogador(jogo, dir).start());
         return btn;
     }
 
@@ -150,10 +188,16 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
         if (mapa == 0) return;
 
         jogo.iniciarNovoJogo(dif, mapa);
+        requestFocusInWindow();
     }
 
     @Override
     public void atualizar() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(this::atualizar);
+            return;
+        }
+
         painelTabuleiro.setDados(jogo.getTabuleiro(), jogo.getJogador(), jogo.isDebugMode());
 
         if (jogo.getJogador() != null) {
@@ -207,6 +251,7 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
                     dialogoCombate = null;
                 }
                 menuGui.setDialogo(null);
+                requestFocusInWindow();
             });
         } catch (Exception e) {
             throw new RuntimeException(e);

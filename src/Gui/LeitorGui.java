@@ -3,31 +3,32 @@ package Gui;
 import Sistema.LeitorDeInput;
 import Util.Direcao;
 
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class LeitorGui extends LeitorDeInput {
 
-    private CountDownLatch latch = new CountDownLatch(1);
-    private int escolha = 1;
+    private final BlockingQueue<Integer> fila = new LinkedBlockingQueue<>();
 
     public LeitorGui() {
         super(null);
     }
 
     public void escolher(int valor) {
-        escolha = valor;
-        latch.countDown();
+        fila.offer(valor);
     }
 
     @Override
     public int lerInput(int min, int max) {
-        latch = new CountDownLatch(1);
+        fila.clear(); // ignora cliques antigos
         try {
-            latch.await();
+            int valor = fila.take();
+            if (valor < min || valor > max) return min;
+            return valor;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            return min;
         }
-        return escolha;
     }
 
     @Override
