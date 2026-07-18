@@ -1,10 +1,10 @@
-package Entidades.Dinossauros;
+package Entidades.Personagens.Dinossauros;
 
-import Entidades.Jogador;
-import Entidades.Personagem;
+import Entidades.Personagens.Jogador;
+import Entidades.Personagens.Personagem;
 import Util.Macros;
-import Sistema.Movimentacao.Direcao;
-import Sistema.Movimentacao.ResultadoMovimento;
+import Util.Direcao;
+import Util.ResultadoMovimento;
 import Sistema.Tabuleiro;
 
 import java.util.Random;

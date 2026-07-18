@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 import Entidades.*;
-import Entidades.Dinossauros.Compsognato;
-import Entidades.Dinossauros.Dinossauro;
+import Entidades.Personagens.Dinossauros.Compsognato;
+import Entidades.Personagens.Dinossauros.Dinossauro;
+import Entidades.Personagens.Jogador;
 import Itens.Item;
-import Itens.KitMedico;
-import Itens.Consumivel;
-import Sistema.Movimentacao.*;
+import Itens.Consumiveis.KitMedico;
+import Itens.Consumiveis.Consumivel;
 import Util.*;
 
 public class Jogo {

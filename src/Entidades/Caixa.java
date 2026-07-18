@@ -1,6 +1,6 @@
 package Entidades;
 
-import Entidades.Dinossauros.Compsognato;
+import Entidades.Personagens.Dinossauros.Compsognato;
 import Itens.Item;
 import Util.Macros;
 

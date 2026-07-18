@@ -1,4 +1,4 @@
-package Itens;
+package Itens.Consumiveis;
 
 public interface Consumivel {
     /**

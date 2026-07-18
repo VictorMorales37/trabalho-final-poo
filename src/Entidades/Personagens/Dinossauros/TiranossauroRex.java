@@ -1,4 +1,4 @@
-package Entidades.Dinossauros;
+package Entidades.Personagens.Dinossauros;
 import Util.Macros;
 
 public class TiranossauroRex extends Dinossauro {

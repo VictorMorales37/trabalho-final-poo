@@ -1,4 +1,6 @@
-package Entidades;
+package Entidades.Personagens;
+
+import Entidades.Entidade;
 
 public abstract class Personagem extends Entidade {
     protected int saude;

@@ -1,10 +1,11 @@
 package Sistema;
 
 import Entidades.*;
-import Entidades.Dinossauros.*;
+import Entidades.Personagens.Dinossauros.*;
+import Entidades.Personagens.Jogador;
 import Itens.Bastao;
-import Itens.KitMedico;
-import Itens.MunicaoDardos;
+import Itens.Consumiveis.KitMedico;
+import Itens.Consumiveis.MunicaoDardos;
 import Util.Macros;
 
 import java.io.BufferedReader;

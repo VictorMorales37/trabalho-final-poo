@@ -1,4 +1,4 @@
-package Sistema;
+package Util;
 
 public enum EstadoJogo {
     CONTINUAR,

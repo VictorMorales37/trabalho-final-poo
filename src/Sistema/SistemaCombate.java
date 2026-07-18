@@ -1,12 +1,15 @@
 package Sistema;
-import Entidades.Dinossauros.Dinossauro;
-import Entidades.Jogador;
+import Entidades.Personagens.Dinossauros.Dinossauro;
+import Entidades.Personagens.Jogador;
 import Itens.ArmaDardos;
 import Itens.Bastao;
 import Itens.Item;
-import Itens.KitMedico;
-import Itens.Consumivel;
+import Itens.Consumiveis.KitMedico;
+import Itens.Consumiveis.Consumivel;
+import Util.Direcao;
 import Util.Macros;
+import Util.ResultadoCombate;
+
 import java.util.Random;
 
 
@@ -26,7 +29,7 @@ public class SistemaCombate {
     }
 
     public ResultadoCombate combate(Jogador jogador, Dinossauro dino, Menu menu,
-                                             LeitorDeInput leitorDeInput, Tabuleiro tabuleiro) {
+                                    LeitorDeInput leitorDeInput, Tabuleiro tabuleiro) {
 
         while (jogador.estaVivo() && dino.estaVivo()) {
             menu.opcoesCombate(jogador); // 1 - mão | 2 - bastão | 3 - dardos | 4 - curar | 5 - fugir
@@ -131,12 +134,12 @@ public class SistemaCombate {
     public void fugir(Jogador jogador, Tabuleiro tabuleiro) {
         for (int tentativas = 0; tentativas < 4; tentativas++) {
             int val = random.nextInt(4);
-            Sistema.Movimentacao.Direcao dir = switch (val) {
-                case 0 -> Sistema.Movimentacao.Direcao.CIMA;
-                case 1 -> Sistema.Movimentacao.Direcao.BAIXO;
-                case 2 -> Sistema.Movimentacao.Direcao.DIREITA;
-                case 3 -> Sistema.Movimentacao.Direcao.ESQUERDA;
-                default -> Sistema.Movimentacao.Direcao.INVALIDA;
+            Direcao dir = switch (val) {
+                case 0 -> Direcao.CIMA;
+                case 1 -> Direcao.BAIXO;
+                case 2 -> Direcao.DIREITA;
+                case 3 -> Direcao.ESQUERDA;
+                default -> Direcao.INVALIDA;
             };
             jogador.mover(dir, tabuleiro);
         }

@@ -1,8 +1,8 @@
 package Sistema;
 
 import Entidades.Caixa;
-import Entidades.Jogador;
-import Entidades.Dinossauros.Compsognato;
+import Entidades.Personagens.Jogador;
+import Entidades.Personagens.Dinossauros.Compsognato;
 import Itens.Item;
 
 import java.util.ArrayList;

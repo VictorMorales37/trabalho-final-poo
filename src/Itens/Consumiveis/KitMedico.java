@@ -1,7 +1,8 @@
-package Itens;
+package Itens.Consumiveis;
 
-import Entidades.Dinossauros.Dinossauro;
-import Entidades.Jogador;
+import Entidades.Personagens.Dinossauros.Dinossauro;
+import Entidades.Personagens.Jogador;
+import Itens.Item;
 import Util.Macros;
 
 public class KitMedico extends Item implements Consumivel {

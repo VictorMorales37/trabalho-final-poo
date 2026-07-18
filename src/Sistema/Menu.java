@@ -1,9 +1,9 @@
 package Sistema;
 import Entidades.Entidade;
-import Sistema.Movimentacao.ResultadoMovimento;
-import Entidades.Jogador;
+import Entidades.Personagens.Jogador;
 import Util.Macros;
-import Entidades.Dinossauros.Dinossauro;
+import Entidades.Personagens.Dinossauros.Dinossauro;
+import Util.ResultadoMovimento;
 
 public class Menu {
     public void menuInicial() {

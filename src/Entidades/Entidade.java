@@ -1,7 +1,7 @@
 package Entidades;
 
 import Sistema.Tabuleiro;
-import Sistema.Movimentacao.ResultadoMovimento;
+import Util.ResultadoMovimento;
 import Util.Macros;
 
 public abstract class Entidade {

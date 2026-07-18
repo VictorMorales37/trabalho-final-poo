@@ -1,5 +1,5 @@
 import Sistema.Jogo;
-import Sistema.EstadoJogo;
+import Util.EstadoJogo;
 
 public static void main(String[] args) {
     Jogo jogo = new Jogo();

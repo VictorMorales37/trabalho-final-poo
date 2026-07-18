@@ -1,4 +1,4 @@
-package Sistema.Movimentacao;
+package Util;
 
 public enum ResultadoMovimento {
     LIVRE,

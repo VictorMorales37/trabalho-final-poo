@@ -1,6 +1,7 @@
 package Sistema;
 import Entidades.*;
-import Entidades.Dinossauros.Dinossauro;
+import Entidades.Personagens.Dinossauros.Dinossauro;
+import Entidades.Personagens.Jogador;
 import Util.Macros;
 
 import java.util.ArrayList;

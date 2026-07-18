@@ -1,7 +1,8 @@
-package Itens;
+package Itens.Consumiveis;
 
-import Entidades.Dinossauros.Dinossauro;
-import Entidades.Jogador;
+import Entidades.Personagens.Dinossauros.Dinossauro;
+import Entidades.Personagens.Jogador;
+import Itens.Item;
 
 public class MunicaoDardos extends Item implements Consumivel {
     @Override

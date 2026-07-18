@@ -1,10 +1,10 @@
-package Entidades;
+package Entidades.Personagens;
 
 import Itens.ArmaDardos;
 import Itens.Inventario;
 import Itens.Item;
-import Sistema.Movimentacao.Direcao;
-import Sistema.Movimentacao.ResultadoMovimento;
+import Util.Direcao;
+import Util.ResultadoMovimento;
 import Sistema.Tabuleiro;
 import Util.Macros;
 

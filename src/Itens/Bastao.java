@@ -1,7 +1,7 @@
 package Itens;
 
-import Entidades.Dinossauros.Dinossauro;
-import Entidades.Jogador;
+import Entidades.Personagens.Dinossauros.Dinossauro;
+import Entidades.Personagens.Jogador;
 
 import java.util.Random;
 
