@@ -5,6 +5,7 @@ import Itens.ArmaDardos;
 import Itens.Bastao;
 import Itens.Item;
 import Itens.KitMedico;
+import Itens.Consumivel;
 import Util.Macros;
 import java.util.Random;
 
@@ -27,7 +28,7 @@ public class SistemaCombate {
     public ResultadoCombate combate(Jogador jogador, Dinossauro dino, Menu menu,
                                              LeitorDeInput leitorDeInput, Tabuleiro tabuleiro) {
 
-        while (jogador.getSaude() > 0 && dino.getSaude() > 0) {
+        while (jogador.estaVivo() && dino.estaVivo()) {
             menu.opcoesCombate(jogador); // 1 - mão | 2 - bastão | 3 - dardos | 4 - curar | 5 - fugir
             int input = leitorDeInput.lerInput(1, 5);
 
@@ -43,6 +44,9 @@ public class SistemaCombate {
                     System.out.println("Você não tem kits de medicos.");
                 } else {
                     kit.usar(jogador, dino);
+                    if (kit instanceof Consumivel && ((Consumivel) kit).consumidoAposUso()) {
+                        jogador.removerItem(kit);
+                    }
                 }
             }
             else {
@@ -80,8 +84,8 @@ public class SistemaCombate {
                     System.out.println("Voce atacou o dinossauro");
                     System.out.println("Ele recebeu " + dano + " de dano\n");
                 }
-                dino.setSaude(dino.getSaude() - dano);
-                if (dino.getSaude() <= 0) {
+                dino.receberDano(dano);
+                if (!dino.estaVivo()) {
                     System.out.println("Voce derrotou o dinossauro!");
                     return ResultadoCombate.VENCEU;
                 }
@@ -110,7 +114,7 @@ public class SistemaCombate {
                 jogador.setSaude(jogador.getSaude() - dino.getDanoAtaque());
             }
 
-            if ( jogador.getSaude() <= 0){
+            if (!jogador.estaVivo()){
                 return ResultadoCombate.PERDEU;
             }
         }

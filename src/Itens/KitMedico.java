@@ -4,7 +4,7 @@ import Entidades.Dinossauros.Dinossauro;
 import Entidades.Jogador;
 import Util.Macros;
 
-public class KitMedico extends Item {
+public class KitMedico extends Item implements Consumivel {
     @Override
     public String getNome() {
         return "Kit Médico";
@@ -13,8 +13,12 @@ public class KitMedico extends Item {
     @Override
     public int usar(Jogador jogador, Dinossauro dino) {
         jogador.receberCura(Macros.CURA);
-        jogador.removerItem(this);
         System.out.println("Você usou o kit médico e recuperou vida.");
         return 0;
+    }
+
+    @Override
+    public boolean consumidoAposUso() {
+        return true;
     }
 }

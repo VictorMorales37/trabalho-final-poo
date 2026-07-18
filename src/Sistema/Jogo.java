@@ -8,6 +8,7 @@ import Entidades.Dinossauros.Compsognato;
 import Entidades.Dinossauros.Dinossauro;
 import Itens.Item;
 import Itens.KitMedico;
+import Itens.Consumivel;
 import Sistema.Movimentacao.*;
 import Util.*;
 
@@ -19,6 +20,7 @@ public class Jogo {
     private Jogador jogador;
     private final SistemaCombate sistemaCombate;
     private final SistemaItens sistemaItens;
+    private final SistemaSalvamento sistemaSalvamento;
     private final LeitorDeInput leitorDeInput;
     private final CarregadorMapa carregadorMapa;
     private final ArrayList<Dinossauro> dinossauros;
@@ -32,6 +34,7 @@ public class Jogo {
     public Jogo() {
         random = new Random();
         carregadorMapa = new CarregadorMapa(random);
+        sistemaSalvamento = new SistemaSalvamento(random);
         Scanner scanner = new Scanner(System.in);
         tabuleiro = new Tabuleiro(Macros.TAMANHO_TABULEIRO);
         sistemaCombate = new SistemaCombate(random);
@@ -57,6 +60,25 @@ public class Jogo {
         int numeroMapa = leitorDeInput.lerInput(1, Macros.NUM_MAPAS);
         String caminho = Macros.PASTA_MAPAS + "mapa" + numeroMapa + ".txt";
         carregadorMapa.carregar(caminho, tabuleiro, jogador, dinossauros, caixas);
+        finalizarCarregamentoPartida();
+    }
+
+    private void carregarSave() {
+        if (!sistemaSalvamento.existeSave(Macros.ARQUIVO_SAVE)) {
+            menu.mensagemSaveAusente();
+            return;
+        }
+        sistemaSalvamento.carregar(Macros.ARQUIVO_SAVE, tabuleiro, jogador, dinossauros, caixas);
+        finalizarCarregamentoPartida();
+        menu.mensagemCarregado();
+    }
+
+    private void salvarJogo() {
+        sistemaSalvamento.salvar(Macros.ARQUIVO_SAVE, jogador, dinossauros, caixas, tabuleiro);
+        menu.mensagemSalvo();
+    }
+
+    private void finalizarCarregamentoPartida() {
         tabuleiro.atualizar(jogador, dinossauros, caixas);
         tabuleiro.salvarPosicoes();
         salvarEstadoInicial();
@@ -66,20 +88,26 @@ public class Jogo {
         if (estado == EstadoJogo.REINICIAR) {
             reiniciarPartida();
         } else {
-            int inputOpcoes = 0;
-            while (inputOpcoes != 2) {
+            boolean partidaPronta = false;
+            while (!partidaPronta) {
                 menu.menuInicial();
-                inputOpcoes = leitorDeInput.lerInput(1, 2);
+                int inputOpcoes = leitorDeInput.lerInput(1, 3);
                 if (inputOpcoes == 1) {
                     menu.escolherDificuldade();
                     setDificuldade();
                     carregarMapaEscolhido();
-                    break;
+                    partidaPronta = true;
+                } else if (inputOpcoes == 2) {
+                    if (!sistemaSalvamento.existeSave(Macros.ARQUIVO_SAVE)) {
+                        menu.mensagemSaveAusente();
+                        continue;
+                    }
+                    carregarSave();
+                    partidaPronta = true;
+                } else {
+                    estado = EstadoJogo.SAIR;
+                    return;
                 }
-            }
-            if (inputOpcoes == 2) {
-                estado = EstadoJogo.SAIR;
-                return;
             }
         }
 
@@ -91,7 +119,7 @@ public class Jogo {
     private void loopJogo() {
         while (estado == EstadoJogo.CONTINUAR) {
             menu.menuPrincipal();
-            int inputOpcoes = leitorDeInput.lerInput(1, 4);
+            int inputOpcoes = leitorDeInput.lerInput(1, 5);
 
             if (inputOpcoes == 1) loopMovimento();
             else if (inputOpcoes == 2) {
@@ -100,13 +128,17 @@ public class Jogo {
                     System.out.println("Você não tem kits médicos.");
                 } else {
                     kit.usar(jogador, null);
+                    if (kit instanceof Consumivel && ((Consumivel) kit).consumidoAposUso()) {
+                        jogador.removerItem(kit);
+                    }
                 }
             }
             else if (inputOpcoes == 3) {
                 debugMode = true;
                 System.out.println("MODO DEBUG ATIVADO");
             }
-            else if (inputOpcoes == 4) sairDoJogo();
+            else if (inputOpcoes == 4) salvarJogo();
+            else if (inputOpcoes == 5) sairDoJogo();
         }
     }
 
