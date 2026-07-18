@@ -1,14 +1,16 @@
-import Sistema.Jogo;
-import Util.EstadoJogo;
+import Gui.JanelaPrincipal;
 
-public static void main(String[] args) {
-    Jogo jogo = new Jogo();
+import javax.swing.*;
 
-    while (jogo.getEstado() != EstadoJogo.SAIR) {
-        jogo.iniciarJogo();
-
-        if (jogo.getEstado() == EstadoJogo.NOVO_JOGO) {
-            jogo = new Jogo();
-        }
+public class Main {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception ignored) {
+            }
+            JanelaPrincipal janela = new JanelaPrincipal();
+            janela.setVisible(true);
+        });
     }
 }
