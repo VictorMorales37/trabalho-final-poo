@@ -24,5 +24,6 @@ public class Macros {
     public static final int NUM_VELOCIRAPTOR = 2;
     public static final int NUM_TREX = 1;
     public static final String SIMB_MISTERIO = "+ ";
+    public static final int CURA = 5;
 }
 

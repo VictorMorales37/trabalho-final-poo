@@ -18,9 +18,10 @@ public class LeitorDeInput {
                 if (valor >= min && valor <= max) {
                     return valor;
                 }
+                System.out.println("Digite um valor entre " + min + " e " + max + ".");
             } catch (InputMismatchException e) {
                 System.out.println("Digite valor valido: (valores entre " + min + " e " + max + ")");
-                scanner.nextLine(); // limpa o buffer
+                scanner.nextLine();
             }
         }
     }

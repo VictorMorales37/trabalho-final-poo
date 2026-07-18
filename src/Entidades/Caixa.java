@@ -29,7 +29,13 @@ public class Caixa extends Entidade {
         if (item != null) {
             c = new Caixa(item); 
         } else {
-            c = new Caixa((Compsognato) (compsognato != null ? compsognato.copia() : null));
+            Compsognato copia;
+            if (compsognato != null) {
+                copia = (Compsognato) compsognato.copia();
+            } else {
+                copia = null;
+            }
+            c = new Caixa(copia);
         }
 
         c.setPosicaoX(getPosicaoX());

@@ -1,4 +1,5 @@
 package Sistema;
+import Entidades.Entidade;
 import Sistema.Movimentacao.ResultadoMovimento;
 import Entidades.Jogador;
 import Util.Macros;
@@ -50,7 +51,13 @@ public class Menu {
         for (int x = 0; x < t.getDimensao(); x++) {
             for (int y = 0; y < t.getDimensao(); y++) {
                 if (visivel[x][y]) {
-                    char simb = t.getEntidade(x, y) != null ? t.getEntidade(x, y).getSimbolo() : '.';
+                    Entidade entidade = t.getEntidade(x, y);
+                    char simb;
+                    if (entidade != null) {
+                        simb = entidade.getSimbolo();
+                    } else {
+                        simb = '.';
+                    }
                     System.out.print(simb + " ");
                 } else {
                     System.out.print(Macros.SIMB_MISTERIO);

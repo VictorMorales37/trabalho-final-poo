@@ -1,36 +1,46 @@
 package Sistema;
 
-import Entidades.*;
-import Itens.*;
+import Entidades.Caixa;
+import Entidades.Jogador;
 import Entidades.Dinossauros.Compsognato;
-import Entidades.Dinossauros.Dinossauro;
+import Itens.Item;
 
 import java.util.ArrayList;
 
 public class SistemaItens {
-    private final SistemaCombate sistemaCombate;
 
-    public SistemaItens(SistemaCombate sistemaCombate) {
-        this.sistemaCombate = sistemaCombate;
+    public Compsognato processarCaixaNaPosicao(Jogador jogador, ArrayList<Caixa> caixas) {
+        Caixa caixaEncontrada = encontrarCaixa(jogador, caixas);
+        if (caixaEncontrada == null) return null;
+
+        Compsognato surpresa = abrirCaixa(jogador, caixaEncontrada);
+        caixas.remove(caixaEncontrada);
+
+        if (surpresa != null) {
+            surpresa.setPosicaoX(caixaEncontrada.getPosicaoX());
+            surpresa.setPosicaoY(caixaEncontrada.getPosicaoY());
+        }
+        return surpresa;
     }
 
-    public void abrirCaixa(Jogador jogador, Caixa caixa, ArrayList<Dinossauro> dinossauros,
-                           Tabuleiro tabuleiro, Menu menu, LeitorDeInput leitorDeInput) {
+    private Caixa encontrarCaixa(Jogador jogador, ArrayList<Caixa> caixas) {
+        for (Caixa c : caixas) {
+            if (c.getPosicaoX() == jogador.getPosicaoX() && c.getPosicaoY() == jogador.getPosicaoY()) {
+                return c;
+            }
+        }
+        return null;
+    }
 
-        if (caixa.getItem() instanceof KitMedico) {
-            System.out.println("Você encontrou Kit Médico");
-            jogador.setKitsMedicos(jogador.getKitsMedicos() + 1);
-        }
-        else if (caixa.getItem() instanceof Bastao) {
-            System.out.println("Você encontrou Bastão");
-            jogador.setTemBastao();
-        }
-        else if (caixa.getItem() instanceof MunicaoDardos) {
-            System.out.println("Você encontrou munição para arma de dardos");
-            jogador.setArmaDardos(jogador.getArmaDardos() + 1);
-        }
-        else if (caixa.getCompsognato() != null) {
+    private Compsognato abrirCaixa(Jogador jogador, Caixa caixa) {
+        if (caixa.getItem() != null) {
+            Item item = caixa.getItem();
+            System.out.println("Você encontrou " + item.getNome());
+            jogador.receberItem(item);
+            return null;
+        } else {
             System.out.println("Cuidado! Um compsognato estava atrás da caixa");
+            return caixa.getCompsognato();
         }
     }
 }

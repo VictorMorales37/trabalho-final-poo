@@ -6,6 +6,8 @@ import java.util.Scanner;
 import Entidades.*;
 import Entidades.Dinossauros.Compsognato;
 import Entidades.Dinossauros.Dinossauro;
+import Itens.Item;
+import Itens.KitMedico;
 import Sistema.Movimentacao.*;
 import Util.*;
 
@@ -33,7 +35,7 @@ public class Jogo {
         Scanner scanner = new Scanner(System.in);
         tabuleiro = new Tabuleiro(Macros.TAMANHO_TABULEIRO);
         sistemaCombate = new SistemaCombate(random);
-        sistemaItens = new SistemaItens(sistemaCombate);
+        sistemaItens = new SistemaItens();
         menu = new Menu();
         jogador = spawner.spawnJogador(tabuleiro);
         leitorDeInput = new LeitorDeInput(scanner);
@@ -87,7 +89,14 @@ public class Jogo {
             int inputOpcoes = leitorDeInput.lerInput(1, 4);
 
             if (inputOpcoes == 1) loopMovimento();
-            else if (inputOpcoes == 2) sistemaCombate.curar(jogador);
+            else if (inputOpcoes == 2) {
+                Item kit = jogador.pegarItem(KitMedico.class);
+                if (kit == null) {
+                    System.out.println("Você não tem kits médicos.");
+                } else {
+                    kit.usar(jogador, null);
+                }
+            }
             else if (inputOpcoes == 3) {
                 debugMode = true;
                 System.out.println("MODO DEBUG ATIVADO");
@@ -169,25 +178,10 @@ public class Jogo {
     }
 
     private void processarCaixa() {
-
-        for (Caixa c : caixas) {
-            if (c.getPosicaoX() == jogador.getPosicaoX()
-                    && c.getPosicaoY() == jogador.getPosicaoY()) {
-
-                sistemaItens.abrirCaixa(jogador, c, dinossauros, tabuleiro, menu, leitorDeInput);
-                if (c.getCompsognato() != null) {
-                    Dinossauro surpresa = c.getCompsognato();
-                    dinossauros.add(surpresa);
-                    surpresa.setPosicaoX(c.getPosicaoX());
-                    surpresa.setPosicaoY(c.getPosicaoY());
-                    caixas.remove(c);
-                    processarResultadoCombate(surpresa, true);
-                }
-                else {
-                    caixas.remove(c);
-                }
-                break;
-            }
+        Compsognato surpresa = sistemaItens.processarCaixaNaPosicao(jogador, caixas);
+        if (surpresa != null) {
+            dinossauros.add(surpresa);
+            processarResultadoCombate(surpresa, true);
         }
     }
 

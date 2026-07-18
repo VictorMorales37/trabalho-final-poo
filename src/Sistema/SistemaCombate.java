@@ -1,8 +1,13 @@
 package Sistema;
 import Entidades.Dinossauros.Dinossauro;
 import Entidades.Jogador;
+import Itens.ArmaDardos;
+import Itens.Bastao;
+import Itens.Item;
+import Itens.KitMedico;
 import Util.Macros;
 import java.util.Random;
+
 
 public class SistemaCombate {
     private final Random random;
@@ -10,44 +15,13 @@ public class SistemaCombate {
     public SistemaCombate(Random random) {
         this.random = random;
     }
-    // ----------------------------- ataque -----------------------------
+
     public int atacarMao(){
         int acerto = random.nextInt(6) + 1;
 
-        if (acerto == 6){ // crítico
-            return 2;
-        }
-        else if (acerto == 1 || acerto == 2){ // falha
-            return 0;
-        }
+        if (acerto == 6) return 2; // critico
+        else if (acerto == 1 || acerto == 2) return 0; // falha
         else return 1;
-    }
-    public int atacarBastao(Jogador j) {
-        if (j.getTemBastao()) {
-            int acerto = random.nextInt(6) + 1;
-            if (acerto == 6){ // crítico
-                return 2;
-            }
-            else if (acerto == 1){ // falha
-                return 0;
-            }
-            else{
-                return 1;
-            }
-        } else {
-            System.out.println("Você ainda não tem bastão.");
-            return 0;
-        }
-    }
-    public int atacarArmaDardos(Jogador j){
-        if (j.getArmaDardos() > 0){
-            j.setArmaDardos(j.getArmaDardos() - 1);
-            return Macros.DANO_DARDOS;
-        }
-        else {
-            System.out.println("Você não possui dardos para usar.");
-            return 0;
-        }
     }
 
     public ResultadoCombate combate(Jogador jogador, Dinossauro dino, Menu menu,
@@ -57,52 +31,63 @@ public class SistemaCombate {
             menu.opcoesCombate(jogador); // 1 - mão | 2 - bastão | 3 - dardos | 4 - curar | 5 - fugir
             int input = leitorDeInput.lerInput(1, 5);
 
-            int dano = switch (input) {
-                case 1:
-                    if (!dino.podeSerAtacadoSemArma()) {
-                        System.out.println("Não é possível atacar o T-Rex sem armas!");
-                        yield 0;
-                    }
-                    yield atacarMao();
-
-                case 2:
-                    yield atacarBastao(jogador);
-
-                case 3:
-                    if (!dino.podeSerAtacadoComDardos()) {
-                        System.out.println("O Velociraptor é ágil demais para os dardos!");
-                        yield 0;
-                    }
-                    yield atacarArmaDardos(jogador);
-
-                case 4:
-                    curar(jogador); yield 0;
-
-                case 5:
-                    fugir(jogador, tabuleiro); yield -1;
-
-                default:
-                    yield 0;
-            };
-
-            // ------------------------------ dano do ataque do jogador ------------------------------
-
-            if (dano == 0) System.out.println("Ataque falhou");
-
-            else if (dano == -1) {
+            if (input == 5) {
+                fugir(jogador, tabuleiro);
                 System.out.println("Voce fugiu");
                 return ResultadoCombate.FUGIU;
             }
+
+            if (input == 4) {
+                Item kit =  jogador.pegarItem(KitMedico.class);
+                if (kit == null) {
+                    System.out.println("Você não tem kits de medicos.");
+                } else {
+                    kit.usar(jogador, dino);
+                }
+            }
             else {
-                System.out.println("Voce atacou o dinossauro");
-                System.out.println("Ele recebeu " + dano + " de dano\n");
+                int dano = switch (input) {
+                    case 1:
+                        if (!dino.podeSerAtacadoSemArma()) {
+                            System.out.println("Não é possível atacar o T-Rex sem armas!");
+                            yield 0;
+                        }
+                        yield atacarMao();
+
+                    case 2:
+                        Item bastao = jogador.pegarItem(Bastao.class);
+                        if (bastao == null) {
+                            System.out.println("Você ainda não tem bastão.");
+                            yield 0;
+                        } else {
+                            yield bastao.usar(jogador, dino);
+                        }
+
+                    case 3:
+                        Item arma = jogador.pegarItem(ArmaDardos.class);
+                        if (arma == null) {
+                            System.out.println("Você ainda não tem arma de dardos.");
+                            yield 0;
+                        } else {
+                            yield arma.usar(jogador, dino);
+                        }
+                    default:
+                        yield 0;
+                };
+
+                if (dano == 0) System.out.println("Ataque falhou");
+                else {
+                    System.out.println("Voce atacou o dinossauro");
+                    System.out.println("Ele recebeu " + dano + " de dano\n");
+                }
+                dino.setSaude(dino.getSaude() - dano);
+                if (dino.getSaude() <= 0) {
+                    System.out.println("Voce derrotou o dinossauro!");
+                    return ResultadoCombate.VENCEU;
+                }
+
             }
 
-            dino.setSaude(dino.getSaude() - dano);
-            if (dino.getSaude() <= 0) {
-                System.out.println("Voce derrotou o dinossauro!");
-                return ResultadoCombate.VENCEU;
-            }
 
             // ------------------------------ ataque do dinossauro ------------------------------
             System.out.println("Cuidado!");
@@ -130,16 +115,6 @@ public class SistemaCombate {
             }
         }
         return null;
-    }
-
-    // ----------------------------- cura -----------------------------
-    public void curar(Jogador j) {
-        if (j.getKitsMedicos() > 0) {
-            System.out.println("Você usou um Kit Médico.");
-            j.setKitsMedicos(j.getKitsMedicos() - 1);
-            j.setSaude(Macros.SAUDE_JOGADOR);
-        }
-        else System.out.println("Você não possui Kits Médicos para usar.");
     }
 
     // ----------------------------- teste percepção -----------------------------

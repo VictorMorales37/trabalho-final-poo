@@ -30,7 +30,9 @@ public class Tabuleiro {
 
     public void setGrid(Entidade[][] novoGrid) {
         for (int i = 0; i < grid.length; i++) {
-            System.arraycopy(novoGrid[i], 0, grid[i], 0, grid[i].length);
+            for (int j = 0; j < grid[i].length; j++) {
+                grid[i][j] = novoGrid[i][j];
+            }
         }
     }
 

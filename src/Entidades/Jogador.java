@@ -1,30 +1,36 @@
 package Entidades;
 
+import Itens.ArmaDardos;
+import Itens.Inventario;
+import Itens.Item;
 import Sistema.Movimentacao.Direcao;
 import Sistema.Movimentacao.ResultadoMovimento;
 import Sistema.Tabuleiro;
+import Util.Macros;
+
+import java.util.ArrayList;
 
 public class Jogador extends Entidade {
     private final char simbolo;
     private int percepcao;
-    private int armaDardos;
-    private int kitsMedicos;
-    private boolean temBastao = false;
+
+    private Inventario inventario;
 
     public Jogador(char simbolo, int saude, int percepcao) {
-        armaDardos = 0;
-        kitsMedicos = 0;
         this.simbolo = simbolo;
         this.saude = saude;
         this.percepcao = percepcao;
         posicaoX = -1;
         posicaoY = -1;
+        inventario = new Inventario();
+        this.receberItem(new ArmaDardos());
     }
 
     public Jogador copia() {
         Jogador j = new Jogador(simbolo, saude, percepcao);
         j.setPosicaoX(posicaoX);
         j.setPosicaoY(posicaoY);
+        j.inventario = this.inventario;
         return j;
     }
 
@@ -46,28 +52,25 @@ public class Jogador extends Entidade {
         return resultado;
     }
 
-    public void setTemBastao() {
-        temBastao = true;
+    public void receberItem(Item item) {
+        inventario.adicionar(item);
     }
 
-    public boolean getTemBastao() {
-        return temBastao;
+    public Item pegarItem(Class<?> tipo) {
+        return inventario.pegar(tipo);
     }
 
-    public void setArmaDardos(int armaDardos) {
-        this.armaDardos += armaDardos;
+    public void removerItem(Item item) {
+        inventario.remover(item);
     }
 
-    public void setKitsMedicos(int kitsMedicos) {
-        this.kitsMedicos = kitsMedicos;
-    }
-
-    public int getKitsMedicos() {
-        return kitsMedicos;
-    }
-
-    public int getArmaDardos() {
-        return armaDardos;
+    public void receberCura(int cura){
+        if (this.saude + cura > Macros.SAUDE_JOGADOR) {
+            this.saude = Macros.SAUDE_JOGADOR;
+        }
+        else {
+            this.saude += cura ;
+        }
     }
 
     public void setPercepcao(int p) {

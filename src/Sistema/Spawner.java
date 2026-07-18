@@ -81,7 +81,7 @@ public class Spawner {
     public void spawnCaixas(Tabuleiro t, ArrayList<Caixa> caixas) {
         Caixa[] caixasIniciais = {
                 new Caixa(new Itens.KitMedico()),
-                new Caixa(new Itens.Bastao()),
+                new Caixa(new Itens.Bastao(random)),
                 new Caixa(new Itens.MunicaoDardos()),
                 new Caixa(new Compsognato())
         };
