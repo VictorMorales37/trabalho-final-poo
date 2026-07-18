@@ -80,38 +80,37 @@ public class CarregadorMapa {
         switch (c) {
             case '.' -> { }
             case '#' -> {
-                tabuleiro.getParedes().add(new int[]{x, y});
-                tabuleiro.setPosicoesOcupadas(x, y);
+                Parede p = new Parede();
+                p.setPosicaoX(x);
+                p.setPosicaoY(y);
+                tabuleiro.colocarEntidade(p);
             }
             case Macros.SIMB_JOGADOR -> {
                 jogador.setPosicaoX(x);
                 jogador.setPosicaoY(y);
-                tabuleiro.setPosicoesOcupadas(x, y);
             }
-            case Macros.SIMB_COMPSOGNATO -> adicionarDino(new Compsognato(), x, y, tabuleiro, dinossauros);
-            case Macros.SIMB_TROODONTE -> adicionarDino(new Troodonte(), x, y, tabuleiro, dinossauros);
-            case Macros.SIMB_VELOCIRAPTOR -> adicionarDino(new Velociraptor(), x, y, tabuleiro, dinossauros);
-            case Macros.SIMB_TREX -> adicionarDino(new TiranossauroRex(), x, y, tabuleiro, dinossauros);
-            case 'K' -> adicionarCaixa(new Caixa(new KitMedico()), x, y, tabuleiro, caixas);
-            case 'B' -> adicionarCaixa(new Caixa(new Bastao(random)), x, y, tabuleiro, caixas);
-            case 'M' -> adicionarCaixa(new Caixa(new MunicaoDardos()), x, y, tabuleiro, caixas);
-            case 'S' -> adicionarCaixa(new Caixa(new Compsognato()), x, y, tabuleiro, caixas);
+            case Macros.SIMB_COMPSOGNATO -> adicionarDino(new Compsognato(), x, y, dinossauros);
+            case Macros.SIMB_TROODONTE -> adicionarDino(new Troodonte(), x, y, dinossauros);
+            case Macros.SIMB_VELOCIRAPTOR -> adicionarDino(new Velociraptor(), x, y, dinossauros);
+            case Macros.SIMB_TREX -> adicionarDino(new TiranossauroRex(), x, y, dinossauros);
+            case 'K' -> adicionarCaixa(new Caixa(new KitMedico()), x, y, caixas);
+            case 'B' -> adicionarCaixa(new Caixa(new Bastao(random)), x, y, caixas);
+            case 'M' -> adicionarCaixa(new Caixa(new MunicaoDardos()), x, y, caixas);
+            case 'S' -> adicionarCaixa(new Caixa(new Compsognato()), x, y, caixas);
             default -> throw new IllegalArgumentException(
                     "Símbolo inválido '" + c + "' em (" + x + "," + y + ")");
         }
     }
 
-    private void adicionarDino(Dinossauro d, int x, int y, Tabuleiro tabuleiro, ArrayList<Dinossauro> dinossauros) {
+    private void adicionarDino(Dinossauro d, int x, int y, ArrayList<Dinossauro> dinossauros) {
         d.setPosicaoX(x);
         d.setPosicaoY(y);
-        tabuleiro.setPosicoesOcupadas(x, y);
         dinossauros.add(d);
     }
 
-    private void adicionarCaixa(Caixa c, int x, int y, Tabuleiro tabuleiro, ArrayList<Caixa> caixas) {
+    private void adicionarCaixa(Caixa c, int x, int y, ArrayList<Caixa> caixas) {
         c.setPosicaoX(x);
         c.setPosicaoY(y);
-        tabuleiro.setPosicoesOcupadas(x, y);
         caixas.add(c);
     }
 }

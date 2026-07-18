@@ -7,28 +7,26 @@ import java.util.ArrayList;
 
 public class Tabuleiro {
     private final int dimensao;
-    private Entidade[][] grid;
+    private final Entidade[][] grid;
     private Entidade[][] posicoesIniciais;
-    private final boolean[][] posicoesOcupadas;
-    private final ArrayList<int[]> paredes;
 
     public Tabuleiro(int dimensao) {
         this.dimensao = dimensao;
         grid = new Entidade[dimensao][dimensao];
         posicoesIniciais = new Entidade[dimensao][dimensao];
-        posicoesOcupadas = new boolean[dimensao][dimensao];
-        paredes = new ArrayList<>();
     }
 
     public void limpar() {
-        paredes.clear();
         for (int i = 0; i < dimensao; i++) {
             for (int j = 0; j < dimensao; j++) {
                 grid[i][j] = null;
                 posicoesIniciais[i][j] = null;
-                posicoesOcupadas[i][j] = false;
             }
         }
+    }
+
+    public void colocarEntidade(Entidade entidade) {
+        grid[entidade.getPosicaoX()][entidade.getPosicaoY()] = entidade;
     }
 
     public Entidade[][] getGrid() {
@@ -55,22 +53,6 @@ public class Tabuleiro {
         return dimensao;
     }
 
-    public ArrayList<int[]> getParedes() {
-        return paredes;
-    }
-
-    public boolean verificarPosicao(int x, int y) {
-        if (x < 0 || x > dimensao - 1) return false;
-        if (y < 0 || y > dimensao - 1) return false;
-
-        for (int i = 0; i < dimensao; i++) {
-            for (int j = 0; j < dimensao; j++) {
-                if (i == x && j == y && posicoesOcupadas[i][j]) return false;
-            }
-        }
-        return true;
-    }
-
     public void salvarPosicoes() {
         posicoesIniciais = new Entidade[dimensao][dimensao];
 
@@ -79,37 +61,24 @@ public class Tabuleiro {
         }
     }
 
-    public void setPosicoesOcupadas(int x, int y) {
-        posicoesOcupadas[x][y] = true;
-    }
-
     public void atualizar(Jogador j, ArrayList<Dinossauro> dinos, ArrayList<Caixa> caixas) {
         for (int x = 0; x < dimensao; x++) {
             for (int y = 0; y < dimensao; y++) {
-                grid[x][y] = null;
+                if (!(grid[x][y] instanceof Parede)) {
+                    grid[x][y] = null;
+                }
             }
         }
 
-        // Add Paredes
-        for (int[] parede : paredes) {
-            Parede p = new Parede();
-            p.setPosicaoX(parede[0]);
-            p.setPosicaoY(parede[1]);
-            grid[parede[0]][parede[1]] = p;
-        }
-        
-        // Add Caixas
         for (Caixa caixa : caixas) {
             grid[caixa.getPosicaoX()][caixa.getPosicaoY()] = caixa;
         }
 
-        // Add Dinos
         for (Dinossauro dinossauro : dinos) {
             grid[dinossauro.getPosicaoX()][dinossauro.getPosicaoY()] = dinossauro;
         }
-        
-        // Add Jogador
-        if(j.getPosicaoX() != -1 && j.getPosicaoY() != -1) {
+
+        if (j.getPosicaoX() != -1 && j.getPosicaoY() != -1) {
             grid[j.getPosicaoX()][j.getPosicaoY()] = j;
         }
     }

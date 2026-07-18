@@ -54,8 +54,8 @@ public class Jogo {
 
     private void carregarMapaEscolhido() {
         menu.escolherMapa();
-        int mapa = leitorDeInput.lerInput(1, Macros.NUM_MAPAS);
-        String caminho = Macros.PASTA_MAPAS + "mapa" + mapa + ".txt";
+        int numeroMapa = leitorDeInput.lerInput(1, Macros.NUM_MAPAS);
+        String caminho = Macros.PASTA_MAPAS + "mapa" + numeroMapa + ".txt";
         carregadorMapa.carregar(caminho, tabuleiro, jogador, dinossauros, caixas);
         tabuleiro.atualizar(jogador, dinossauros, caixas);
         tabuleiro.salvarPosicoes();
