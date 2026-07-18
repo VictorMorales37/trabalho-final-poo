@@ -25,7 +25,10 @@ public class Jogador extends Personagem {
         Jogador j = new Jogador(this.simbolo, saude, percepcao);
         j.setPosicaoX(posicaoX);
         j.setPosicaoY(posicaoY);
-        j.inventario = this.inventario;
+        j.limparInventario();
+        for (Item item : this.inventario.getItens()) {
+            j.receberItem(item);
+        }
         return j;
     }
 

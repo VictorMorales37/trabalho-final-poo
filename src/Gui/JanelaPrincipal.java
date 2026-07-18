@@ -2,6 +2,7 @@ package Gui;
 
 import Entidades.Personagens.Dinossauros.Dinossauro;
 import Entidades.Personagens.Jogador;
+import Itens.Consumiveis.KitMedico;
 import Itens.Item;
 import Sistema.InterfaceGui;
 import Sistema.Jogo;
@@ -24,6 +25,7 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
     private JLabel lblSaude;
     private JProgressBar barraSaude;
     private DefaultListModel<String> listaItens;
+    private JButton btnKitMedico;
 
     public JanelaPrincipal() {
         super("Jurassic - Aventura");
@@ -118,6 +120,7 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
         JButton btnCurar = new JButton("Kit médico");
         btnCurar.setFocusable(false);
         btnCurar.addActionListener(e -> executar(() -> jogo.usarKitMedico()));
+        this.btnKitMedico = btnCurar;
         lateral.add(Box.createVerticalStrut(10));
         lateral.add(btnCurar);
 
@@ -209,6 +212,8 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
             for (Item item : jogo.getJogador().getInventario().getItens()) {
                 listaItens.addElement(item.getNome());
             }
+
+            btnKitMedico.setEnabled(jogo.getJogador().pegarItem(KitMedico.class) != null);
         }
     }
 

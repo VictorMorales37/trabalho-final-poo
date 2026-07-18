@@ -53,48 +53,27 @@ public class SistemaCombate {
 
             if (input == 4) {
                 Item kit = jogador.pegarItem(KitMedico.class);
-                if (kit == null) {
-                    menu.mensagem("Você não tem kits de medicos.");
-                } else {
-                    kit.usar(jogador, dino);
-                    if (kit instanceof Consumivel && ((Consumivel) kit).consumidoAposUso()) {
-                        jogador.removerItem(kit);
-                    }
+                if (kit == null) continue; // botão desabilitado na GUI
+                kit.usar(jogador, dino);
+                if (kit instanceof Consumivel && ((Consumivel) kit).consumidoAposUso()) {
+                    jogador.removerItem(kit);
                 }
-            }
-            else {
-                int dano = switch (input) {
-                    case 1:
-                        if (!podeUsarMaos(jogador)) {
-                            menu.mensagem("Você tem bastão, use-o em vez das mãos!");
-                            yield 0;
-                        }
-                        if (!dino.podeSerAtacadoSemArma()) {
-                            menu.mensagem("Não é possível atacar o T-Rex sem armas!");
-                            yield 0;
-                        }
-                        yield atacarMao();
-
-                    case 2:
-                        Item bastao = jogador.pegarItem(Bastao.class);
-                        if (bastao == null) {
-                            menu.mensagem("Você ainda não tem bastão.");
-                            yield 0;
-                        } else {
-                            yield bastao.usar(jogador, dino);
-                        }
-
-                    case 3:
-                        Item arma = jogador.pegarItem(ArmaDardos.class);
-                        if (arma == null) {
-                            menu.mensagem("Você ainda não tem arma de dardos.");
-                            yield 0;
-                        } else {
-                            yield arma.usar(jogador, dino);
-                        }
-                    default:
-                        yield 0;
-                };
+            } else {
+                int dano = 0;
+                if (input == 1) {
+                    if (!podeUsarMaos(jogador) || !dino.podeSerAtacadoSemArma()) continue;
+                    dano = atacarMao();
+                } else if (input == 2) {
+                    Item bastao = jogador.pegarItem(Bastao.class);
+                    if (bastao == null) continue;
+                    dano = bastao.usar(jogador, dino);
+                } else if (input == 3) {
+                    Item arma = jogador.pegarItem(ArmaDardos.class);
+                    if (arma == null) continue;
+                    dano = arma.usar(jogador, dino);
+                } else {
+                    continue;
+                }
 
                 if (dano == 0) menu.mensagem("Ataque falhou");
                 else {
@@ -106,7 +85,6 @@ public class SistemaCombate {
                     menu.mensagem("Voce derrotou o dinossauro!");
                     return ResultadoCombate.VENCEU;
                 }
-
             }
 
             menu.mensagem("Cuidado!");
