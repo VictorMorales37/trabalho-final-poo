@@ -6,6 +6,11 @@ import Entidades.Personagens.Dinossauros.Dinossauro;
 import Util.ResultadoMovimento;
 
 public class Menu {
+
+    public void mensagem(String texto) {
+        System.out.println(texto);
+    }
+
     public void menuInicial() {
         System.out.println("▄█████  ▄▄▄  ▄▄▄▄  ▄▄▄▄  ▄▄▄▄▄ ▄▄ ▄▄ ▄▄ ▄▄ ▄▄ ▄▄▄▄▄ ▄▄  ▄▄  ▄▄▄▄ ▄▄  ▄▄▄       ██ ▄▄ ▄▄ ▄▄▄▄   ▄▄▄   ▄▄▄▄  ▄▄▄▄ ▄▄  ▄▄▄▄  ▄▄▄");
         System.out.println("▀▀▀▄▄▄ ██▀██ ██▄██ ██▄█▄ ██▄▄  ██▄██ ██ ██▄██ ██▄▄  ███▄██ ██▀▀▀ ██ ██▀██      ██ ██ ██ ██▄█▄ ██▀██ ███▄▄ ███▄▄ ██ ██▀▀▀ ██▀██");
@@ -93,43 +98,44 @@ public class Menu {
         System.out.println("5- Fugir do combate");
     }
     public void avisoMovimento(ResultadoMovimento resultado) {
-        if ( resultado == ResultadoMovimento.BLOQUEADO){
-            System.out.println("Movimento não permitido");
-        }
-        else if (resultado == ResultadoMovimento.ENCONTROU_COMPSOGNATO){
-            System.out.println("Encontrou compsognato!");
-        }
-        else if (resultado == ResultadoMovimento.ENCONTROU_TROODONTE){
-            System.out.println("Encontrou troodonte!");
-        }
-        else if (resultado == ResultadoMovimento.ENCONTROU_VELOCIRAPTOR){
-            System.out.println("Encontrou velociraptor!");
-        }
-        else if (resultado == ResultadoMovimento.ENCONTROU_TREX){
-            System.out.println("Encontrou Tiranossauro Rex!");
+        if (resultado == ResultadoMovimento.BLOQUEADO) {
+            mensagem("Movimento não permitido");
+        } else if (resultado == ResultadoMovimento.ENCONTROU_COMPSOGNATO) {
+            mensagem("Encontrou compsognato!");
+        } else if (resultado == ResultadoMovimento.ENCONTROU_TROODONTE) {
+            mensagem("Encontrou troodonte!");
+        } else if (resultado == ResultadoMovimento.ENCONTROU_VELOCIRAPTOR) {
+            mensagem("Encontrou velociraptor!");
+        } else if (resultado == ResultadoMovimento.ENCONTROU_TREX) {
+            mensagem("Encontrou Tiranossauro Rex!");
         }
     }
 
     public void avisoDinossauroEncontrou(Dinossauro d) {
-        System.out.println("Um " + d.getClass().getSimpleName() + " te encontrou!");
+        mensagem("Um " + d.getClass().getSimpleName() + " te encontrou!");
     }
 
     public void mensagemVitoria() {
-        System.out.println("Você EXTINGUIU os dinossauros!");
+        mensagem("Você EXTINGUIU os dinossauros!");
     }
+
     public void mensagemDerrota() {
-        System.out.println("Você MORREU!");
+        mensagem("Você MORREU!");
     }
+
     public void mensagemSaida() {
-        System.out.println("Saindo do jogo...");
+        mensagem("Saindo do jogo...");
     }
+
     public void mensagemSalvo() {
-        System.out.println("Jogo salvo em " + Macros.ARQUIVO_SAVE);
+        mensagem("Jogo salvo em " + Macros.ARQUIVO_SAVE);
     }
+
     public void mensagemCarregado() {
-        System.out.println("Jogo carregado!");
+        mensagem("Jogo carregado!");
     }
+
     public void mensagemSaveAusente() {
-        System.out.println("Nenhum save encontrado em " + Macros.ARQUIVO_SAVE);
+        mensagem("Nenhum save encontrado em " + Macros.ARQUIVO_SAVE);
     }
 }
