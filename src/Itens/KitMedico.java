@@ -13,6 +13,7 @@ public class KitMedico extends Item {
     @Override
     public int usar(Jogador jogador, Dinossauro dino) {
         jogador.receberCura(Macros.CURA);
+        jogador.removerItem(this);
         System.out.println("Você usou o kit médico e recuperou vida.");
         return 0;
     }
