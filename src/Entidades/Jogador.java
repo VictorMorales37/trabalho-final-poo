@@ -8,17 +8,12 @@ import Sistema.Movimentacao.ResultadoMovimento;
 import Sistema.Tabuleiro;
 import Util.Macros;
 
-import java.util.ArrayList;
-
 public class Jogador extends Personagem {
-    private final char simbolo;
     private int percepcao;
-
     private Inventario inventario;
 
     public Jogador(char simbolo, int saude, int percepcao) {
-        this.simbolo = simbolo;
-        this.saude = saude;
+        super(simbolo, saude);
         this.percepcao = percepcao;
         posicaoX = -1;
         posicaoY = -1;
@@ -27,7 +22,7 @@ public class Jogador extends Personagem {
     }
 
     public Jogador copia() {
-        Jogador j = new Jogador(simbolo, saude, percepcao);
+        Jogador j = new Jogador(this.simbolo, saude, percepcao);
         j.setPosicaoX(posicaoX);
         j.setPosicaoY(posicaoY);
         j.inventario = this.inventario;

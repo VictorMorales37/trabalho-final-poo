@@ -1,8 +1,8 @@
 package Entidades.Dinossauros;
 
-import Entidades.Entidade;
 import Entidades.Jogador;
 import Entidades.Personagem;
+import Util.Macros;
 import Sistema.Movimentacao.Direcao;
 import Sistema.Movimentacao.ResultadoMovimento;
 import Sistema.Tabuleiro;
@@ -14,7 +14,7 @@ public abstract class Dinossauro extends Personagem {
     protected int velocidade;
 
     public Dinossauro(int saude, int velocidade) {
-        this.saude = saude;
+        super(Macros.SIMB_COMPSOGNATO, saude);
         this.velocidade = velocidade;
     }
 
@@ -23,7 +23,9 @@ public abstract class Dinossauro extends Personagem {
     @Override
     public abstract char getSimbolo();
 
-    public int getVelocidade() { return velocidade; }
+    public int getVelocidade() { 
+        return velocidade; 
+    }
     
     public boolean podeSerAtacadoSemArma() {
         return true;

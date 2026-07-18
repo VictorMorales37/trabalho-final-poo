@@ -1,5 +1,4 @@
 package Entidades.Dinossauros;
-import Entidades.Entidade;
 import Util.Macros;
 
 public class Velociraptor extends Dinossauro {

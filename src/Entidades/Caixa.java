@@ -9,11 +9,15 @@ public class Caixa extends Entidade {
     private Compsognato compsognato;
 
     public Caixa(Item item) {
+        super(Macros.SIMB_CAIXA);
         this.item = item;
+        this.compsognato = null;
     }
 
     public Caixa(Compsognato compsognato) {
+        super(Macros.SIMB_CAIXA);
         this.compsognato = compsognato;
+        this.item = null;
     }
 
     public Item getItem() {
@@ -45,5 +49,7 @@ public class Caixa extends Entidade {
     }
 
     @Override
-    public char getSimbolo() { return Macros.SIMB_CAIXA; }
+    public char getSimbolo() { 
+        return Macros.SIMB_CAIXA; 
+    }
 }

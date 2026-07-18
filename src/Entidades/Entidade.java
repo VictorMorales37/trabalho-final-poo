@@ -5,9 +5,15 @@ import Sistema.Movimentacao.ResultadoMovimento;
 import Util.Macros;
 
 public abstract class Entidade {
+    protected char simbolo;
     protected int posicaoX;
     protected int posicaoY;
-     // Mantendo para manter a assinatura antiga, subclasses usarão se precisarem
+
+    public Entidade(char simbolo) {
+        this.simbolo = simbolo;
+        this.posicaoX = -1;
+        this.posicaoY = -1;
+    }
 
     public abstract char getSimbolo();
 
