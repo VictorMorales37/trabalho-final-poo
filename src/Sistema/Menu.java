@@ -13,13 +13,15 @@ public class Menu {
 
         System.out.println("Boas vindas, jogador!");
         System.out.println("1- Novo jogo");
-        System.out.println("2- Sair");
+        System.out.println("2- Carregar jogo");
+        System.out.println("3- Sair");
     }
     public void menuPrincipal() {
         System.out.println("1- Movimentar");
         System.out.println("2- Cura");
         System.out.println("3- Modo DEBUG");
-        System.out.println("4- Sair");
+        System.out.println("4- Salvar");
+        System.out.println("5- Sair");
     }
     public void menuSaida() {
         System.out.println("1- Reiniciar Jogo");
@@ -120,5 +122,14 @@ public class Menu {
     }
     public void mensagemSaida() {
         System.out.println("Saindo do jogo...");
+    }
+    public void mensagemSalvo() {
+        System.out.println("Jogo salvo em " + Macros.ARQUIVO_SAVE);
+    }
+    public void mensagemCarregado() {
+        System.out.println("Jogo carregado!");
+    }
+    public void mensagemSaveAusente() {
+        System.out.println("Nenhum save encontrado em " + Macros.ARQUIVO_SAVE);
     }
 }

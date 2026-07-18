@@ -14,15 +14,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
-/**
- * Sistema simples de salvamento/carregamento em texto.
- * Formato resumido:
- * saude=<int>
- * percepcao=<int>
- * itens=NomeItem,OutroItem
- * <10 linhas do mapa>
- * <linhas com dinossauros: simbolo x y saude>
- */
 public class SistemaSalvamento {
 
     private final Random randomGenerator;

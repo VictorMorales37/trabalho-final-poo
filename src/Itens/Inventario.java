@@ -1,8 +1,7 @@
 package Itens;
 
-import Entidades.Jogador;
-
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Inventario {
@@ -23,5 +22,13 @@ public class Inventario {
 
     public void remover(Item item) {
         itens.remove(item);
+    }
+
+    public void limpar() {
+        itens.clear();
+    }
+
+    public List<Item> getItens() {
+        return Collections.unmodifiableList(itens);
     }
 }

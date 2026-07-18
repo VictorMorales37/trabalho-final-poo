@@ -2,13 +2,14 @@ package Entidades.Dinossauros;
 
 import Entidades.Entidade;
 import Entidades.Jogador;
+import Entidades.Personagem;
 import Sistema.Movimentacao.Direcao;
 import Sistema.Movimentacao.ResultadoMovimento;
 import Sistema.Tabuleiro;
 
 import java.util.Random;
 
-public abstract class Dinossauro extends Entidade {
+public abstract class Dinossauro extends Personagem {
 
     protected int velocidade;
 

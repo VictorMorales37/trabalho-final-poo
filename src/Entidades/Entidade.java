@@ -7,7 +7,7 @@ import Util.Macros;
 public abstract class Entidade {
     protected int posicaoX;
     protected int posicaoY;
-    protected int saude; // Mantendo para manter a assinatura antiga, subclasses usarão se precisarem
+     // Mantendo para manter a assinatura antiga, subclasses usarão se precisarem
 
     public abstract char getSimbolo();
 
@@ -19,20 +19,12 @@ public abstract class Entidade {
         this.posicaoY = y;
     }
 
-    public void setSaude(int saude) {
-        this.saude = saude;
-    }
-
     public int getPosicaoX() {
         return posicaoX;
     }
 
     public int getPosicaoY() {
         return posicaoY;
-    }
-
-    public int getSaude() {
-        return saude;
     }
 
     public ResultadoMovimento verificaMovimento(int x, int y, Tabuleiro tabuleiro) {

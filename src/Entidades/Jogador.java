@@ -10,7 +10,7 @@ import Util.Macros;
 
 import java.util.ArrayList;
 
-public class Jogador extends Entidade {
+public class Jogador extends Personagem {
     private final char simbolo;
     private int percepcao;
 
@@ -54,6 +54,14 @@ public class Jogador extends Entidade {
 
     public void receberItem(Item item) {
         inventario.adicionar(item);
+    }
+
+    public void limparInventario() {
+        inventario.limpar();
+    }
+
+    public Inventario getInventario() {
+        return inventario;
     }
 
     public Item pegarItem(Class<?> tipo) {
