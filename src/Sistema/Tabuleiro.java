@@ -10,7 +10,7 @@ public class Tabuleiro {
     private Entidade[][] grid;
     private Entidade[][] posicoesIniciais;
     private final boolean[][] posicoesOcupadas;
-    private final ArrayList<int[]> paredes; // mantido para spawn, mas poderíamos instanciar paredes diretas
+    private final ArrayList<int[]> paredes;
 
     public Tabuleiro(int dimensao) {
         this.dimensao = dimensao;
@@ -18,6 +18,17 @@ public class Tabuleiro {
         posicoesIniciais = new Entidade[dimensao][dimensao];
         posicoesOcupadas = new boolean[dimensao][dimensao];
         paredes = new ArrayList<>();
+    }
+
+    public void limpar() {
+        paredes.clear();
+        for (int i = 0; i < dimensao; i++) {
+            for (int j = 0; j < dimensao; j++) {
+                grid[i][j] = null;
+                posicoesIniciais[i][j] = null;
+                posicoesOcupadas[i][j] = false;
+            }
+        }
     }
 
     public Entidade[][] getGrid() {

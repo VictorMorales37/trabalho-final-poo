@@ -32,6 +32,14 @@ public class Menu {
         System.out.println("2- Médio");
         System.out.println("3- Difícil");
     }
+    public void escolherMapa() {
+        System.out.println("Selecione o mapa:");
+        System.out.println("1- Arena");
+        System.out.println("2- Labirinto");
+        System.out.println("3- Salas");
+        System.out.println("4- Corredores");
+        System.out.println("5- Grade");
+    }
     public void statusJogador(Jogador j) {
         System.out.println("Saude: " + j.getSaude() + "/" + Macros.SAUDE_JOGADOR);
         System.out.println("Percepção: " + j.getPercepcao());

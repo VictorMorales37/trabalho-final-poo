@@ -20,7 +20,7 @@ public class Jogo {
     private final SistemaCombate sistemaCombate;
     private final SistemaItens sistemaItens;
     private final LeitorDeInput leitorDeInput;
-    private final Spawner spawner;
+    private final CarregadorMapa carregadorMapa;
     private final ArrayList<Dinossauro> dinossauros;
     private final ArrayList<Caixa> caixas;
     private EstadoJogo estado = EstadoJogo.NOVO_JOGO;
@@ -31,13 +31,13 @@ public class Jogo {
 
     public Jogo() {
         random = new Random();
-        spawner = new Spawner();
+        carregadorMapa = new CarregadorMapa(random);
         Scanner scanner = new Scanner(System.in);
         tabuleiro = new Tabuleiro(Macros.TAMANHO_TABULEIRO);
         sistemaCombate = new SistemaCombate(random);
         sistemaItens = new SistemaItens();
         menu = new Menu();
-        jogador = spawner.spawnJogador(tabuleiro);
+        jogador = new Jogador(Macros.SIMB_JOGADOR, Macros.SAUDE_JOGADOR, Macros.PERCEPCAO_INICIAL);
         leitorDeInput = new LeitorDeInput(scanner);
         dinossauros = new ArrayList<>();
         caixas = new ArrayList<>();
@@ -52,6 +52,16 @@ public class Jogo {
         jogador.setPercepcao(4 - dificuldade);
     }
 
+    private void carregarMapaEscolhido() {
+        menu.escolherMapa();
+        int mapa = leitorDeInput.lerInput(1, Macros.NUM_MAPAS);
+        String caminho = Macros.PASTA_MAPAS + "mapa" + mapa + ".txt";
+        carregadorMapa.carregar(caminho, tabuleiro, jogador, dinossauros, caixas);
+        tabuleiro.atualizar(jogador, dinossauros, caixas);
+        tabuleiro.salvarPosicoes();
+        salvarEstadoInicial();
+    }
+
     public void iniciarJogo() {
         if (estado == EstadoJogo.REINICIAR) {
             reiniciarPartida();
@@ -63,6 +73,7 @@ public class Jogo {
                 if (inputOpcoes == 1) {
                     menu.escolherDificuldade();
                     setDificuldade();
+                    carregarMapaEscolhido();
                     break;
                 }
             }
@@ -70,12 +81,6 @@ public class Jogo {
                 estado = EstadoJogo.SAIR;
                 return;
             }
-            spawner.spawnParedes(tabuleiro);
-            spawner.spawnDinossauros(tabuleiro, dinossauros, jogador);
-            spawner.spawnCaixas(tabuleiro, caixas);
-            tabuleiro.atualizar(jogador, dinossauros, caixas);
-            tabuleiro.salvarPosicoes();
-            salvarEstadoInicial();
         }
 
         debugMode = false;

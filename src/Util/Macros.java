@@ -19,10 +19,8 @@ public class Macros {
     public static final char SIMB_PAREDE = '█';
     public static final char SIMB_CAIXA = 'X';
     public static final int DANO_DARDOS = 2;
-    public static final int NUM_COMPSOGNATO = 2;
-    public static final int NUM_TROODONTE = 5;
-    public static final int NUM_VELOCIRAPTOR = 2;
-    public static final int NUM_TREX = 1;
+    public static final int NUM_MAPAS = 5;
+    public static final String PASTA_MAPAS = "mapas/";
     public static final String SIMB_MISTERIO = "+ ";
     public static final int CURA = 5;
 }
