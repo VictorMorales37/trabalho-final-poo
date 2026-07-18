@@ -15,308 +15,228 @@ import java.util.Random;
 
 public class ControladorGUI {
 
-    public interface Listener {
-        void onEstadoAlterado();
-        void onMensagem(String mensagem);
-        void onCombateIniciado(Dinossauro dinossauro, boolean dinoAtacouPrimeiro, Direcao direcaoMovimento);
-        void onVitoria();
-        void onDerrota();
-        void onPartidaCarregada();
-    }
-
-    private final Random random;
-    private final Tabuleiro tabuleiro;
-    private Jogador jogador;
-    private final SistemaCombate sistemaCombate;
-    private final SistemaItens sistemaItens;
-    private final SistemaSalvamento sistemaSalvamento;
-    private final CarregadorMapa carregadorMapa;
-    private final ArrayList<Dinossauro> dinossauros;
-    private final ArrayList<Caixa> caixas;
+    private JanelaPrincipal janela;
+    private final Random random = new Random();
+    private final Tabuleiro tabuleiro = new Tabuleiro(Macros.TAMANHO_TABULEIRO);
+    private Jogador jogador = new Jogador(Macros.SIMB_JOGADOR, Macros.SAUDE_JOGADOR, Macros.PERCEPCAO_INICIAL);
+    private final SistemaCombate combate = new SistemaCombate(random);
+    private final SistemaSalvamento salvamento = new SistemaSalvamento(random);
+    private final CarregadorMapa carregadorMapa = new CarregadorMapa(random);
+    private final ArrayList<Dinossauro> dinossauros = new ArrayList<>();
+    private final ArrayList<Caixa> caixas = new ArrayList<>();
 
     private Jogador jogadorInicial;
-    private ArrayList<Dinossauro> dinossaurosIniciais;
+    private ArrayList<Dinossauro> dinosIniciais;
     private ArrayList<Caixa> caixasIniciais;
 
-    private boolean debugMode = false;
-    private boolean partidaAtiva = false;
-    private Listener listener;
+    private boolean debug = false;
+    private boolean jogando = false;
 
-    public ControladorGUI() {
-        random = new Random();
-        carregadorMapa = new CarregadorMapa(random);
-        sistemaSalvamento = new SistemaSalvamento(random);
-        tabuleiro = new Tabuleiro(Macros.TAMANHO_TABULEIRO);
-        sistemaCombate = new SistemaCombate(random);
-        sistemaItens = new SistemaItens();
-        jogador = new Jogador(Macros.SIMB_JOGADOR, Macros.SAUDE_JOGADOR, Macros.PERCEPCAO_INICIAL);
-        dinossauros = new ArrayList<>();
-        caixas = new ArrayList<>();
+    public void setJanela(JanelaPrincipal janela) {
+        this.janela = janela;
     }
 
-    public void setListener(Listener listener) {
-        this.listener = listener;
-    }
+    public Tabuleiro getTabuleiro() { return tabuleiro; }
+    public Jogador getJogador() { return jogador; }
+    public SistemaCombate getCombate() { return combate; }
+    public boolean isDebug() { return debug; }
 
-    public Tabuleiro getTabuleiro() {
-        return tabuleiro;
-    }
-
-    public Jogador getJogador() {
-        return jogador;
-    }
-
-    public ArrayList<Dinossauro> getDinossauros() {
-        return dinossauros;
-    }
-
-    public boolean isDebugMode() {
-        return debugMode;
-    }
-
-    public boolean isPartidaAtiva() {
-        return partidaAtiva;
-    }
-
-    public void iniciarNovoJogo(int dificuldade, int numeroMapa) {
+    public void novoJogo(int dificuldade, int mapa) {
         jogador = new Jogador(Macros.SIMB_JOGADOR, Macros.SAUDE_JOGADOR, Macros.PERCEPCAO_INICIAL);
         jogador.setPercepcao(4 - dificuldade);
         dinossauros.clear();
         caixas.clear();
         tabuleiro.limpar();
 
-        String caminho = Macros.PASTA_MAPAS + "mapa" + numeroMapa + ".txt";
-        carregadorMapa.carregar(caminho, tabuleiro, jogador, dinossauros, caixas);
-        finalizarCarregamentoPartida();
-        debugMode = false;
-        partidaAtiva = true;
-        notificar("Nova partida iniciada!");
-        notificarAlteracao();
+        carregadorMapa.carregar(Macros.PASTA_MAPAS + "mapa" + mapa + ".txt",
+                tabuleiro, jogador, dinossauros, caixas);
+        prepararPartida();
+        debug = false;
+        jogando = true;
+        msg("Nova partida!");
+        atualizar();
     }
 
-    public void carregarJogo() {
-        if (!sistemaSalvamento.existeSave(Macros.ARQUIVO_SAVE)) {
-            notificar("Nenhum save encontrado em " + Macros.ARQUIVO_SAVE);
+    public void carregar() {
+        if (!salvamento.existeSave(Macros.ARQUIVO_SAVE)) {
+            msg("Save não encontrado.");
             return;
         }
         dinossauros.clear();
         caixas.clear();
-        sistemaSalvamento.carregar(Macros.ARQUIVO_SAVE, tabuleiro, jogador, dinossauros, caixas);
-        finalizarCarregamentoPartida();
-        debugMode = false;
-        partidaAtiva = true;
-        notificar("Jogo carregado!");
-        if (listener != null) listener.onPartidaCarregada();
-        notificarAlteracao();
+        salvamento.carregar(Macros.ARQUIVO_SAVE, tabuleiro, jogador, dinossauros, caixas);
+        prepararPartida();
+        debug = false;
+        jogando = true;
+        msg("Jogo carregado!");
+        atualizar();
     }
 
-    public void salvarJogo() {
-        if (!partidaAtiva) {
-            notificar("Nenhuma partida em andamento para salvar.");
+    public void salvar() {
+        if (!jogando) {
+            msg("Nenhuma partida para salvar.");
             return;
         }
-        sistemaSalvamento.salvar(Macros.ARQUIVO_SAVE, jogador, dinossauros, caixas, tabuleiro);
-        notificar("Jogo salvo em " + Macros.ARQUIVO_SAVE);
+        salvamento.salvar(Macros.ARQUIVO_SAVE, jogador, dinossauros, caixas, tabuleiro);
+        msg("Jogo salvo!");
     }
 
-    public void alternarDebugMode() {
-        debugMode = !debugMode;
-        notificar(debugMode ? "Modo DEBUG ativado" : "Modo DEBUG desativado");
-        notificarAlteracao();
+    public void toggleDebug() {
+        debug = !debug;
+        msg(debug ? "Debug ON" : "Debug OFF");
+        atualizar();
     }
 
     public void curar() {
-        if (!partidaAtiva) return;
+        if (!jogando) return;
         Item kit = jogador.pegarItem(KitMedico.class);
         if (kit == null) {
-            notificar("Você não tem kits médicos.");
+            msg("Sem kit médico.");
             return;
         }
         kit.usar(jogador, null);
-        if (kit instanceof Consumivel && ((Consumivel) kit).consumidoAposUso()) {
+        if (kit instanceof Consumivel c && c.consumidoAposUso()) {
             jogador.removerItem(kit);
         }
-        notificar("Você usou um kit médico.");
-        notificarAlteracao();
+        msg("Kit médico usado.");
+        atualizar();
     }
 
-    public void mover(Direcao direcao) {
-        if (!partidaAtiva || direcao == Direcao.INVALIDA) return;
+    public void mover(Direcao dir) {
+        if (!jogando) return;
 
         if (dinossauros.isEmpty()) {
-            notificar("Você EXTINGUIU os dinossauros!");
-            if (listener != null) listener.onVitoria();
+            msg("Você venceu!");
+            janela.mostrarVitoria();
             return;
         }
 
-        ResultadoMovimento resultado = jogador.mover(direcao, tabuleiro);
-        notificarMovimento(resultado);
-
-        if (resultado == ResultadoMovimento.BLOQUEADO) {
-            notificarAlteracao();
+        ResultadoMovimento res = jogador.mover(dir, tabuleiro);
+        if (res == ResultadoMovimento.BLOQUEADO) {
+            msg("Movimento bloqueado.");
+            atualizar();
             return;
         }
 
-        processarResultadoMovimento(resultado, direcao);
-        if (!partidaAtiva) return;
+        if (res == ResultadoMovimento.ENCONTROU_CAIXA) abrirCaixa();
+        else if (res != ResultadoMovimento.LIVRE) combater(dir);
+
+        if (!jogando) return;
 
         tabuleiro.atualizar(jogador, dinossauros, caixas);
-        moverDinossauros();
-        notificarAlteracao();
+        moverDinos();
+        atualizar();
     }
 
-    public void processarResultadoCombate(Dinossauro d, ResultadoCombate res, Direcao direcaoMovimento) {
-        if (res == ResultadoCombate.PERDEU) {
-            notificar("Você MORREU!");
-            partidaAtiva = false;
-            if (listener != null) listener.onDerrota();
-            notificarAlteracao();
-            return;
-        }
-
-        if (res == ResultadoCombate.VENCEU) {
-            dinossauros.remove(d);
-            tabuleiro.atualizar(jogador, dinossauros, caixas);
-            if (direcaoMovimento != null && direcaoMovimento != Direcao.INVALIDA) {
-                jogador.mover(direcaoMovimento, tabuleiro);
-            }
-            if (dinossauros.isEmpty()) {
-                notificar("Você EXTINGUIU os dinossauros!");
-                if (listener != null) listener.onVitoria();
-            }
-        }
-
-        notificarAlteracao();
-    }
-
-    public SistemaCombate getSistemaCombate() {
-        return sistemaCombate;
-    }
-
-    public void reiniciarPartida() {
+    public void reiniciar() {
         if (jogadorInicial == null) return;
         jogador = jogadorInicial.copia();
         dinossauros.clear();
-        for (Dinossauro d : dinossaurosIniciais) dinossauros.add(d.copia());
+        for (Dinossauro d : dinosIniciais) dinossauros.add(d.copia());
         caixas.clear();
         for (Caixa c : caixasIniciais) caixas.add(c.copia());
         tabuleiro.setGrid(tabuleiro.getPosicoesIniciais());
         tabuleiro.atualizar(jogador, dinossauros, caixas);
-        debugMode = false;
-        partidaAtiva = true;
-        notificar("Partida reiniciada!");
-        notificarAlteracao();
+        debug = false;
+        jogando = true;
+        msg("Partida reiniciada.");
+        atualizar();
     }
 
-    private void finalizarCarregamentoPartida() {
+    public void fimCombate(Dinossauro d, ResultadoCombate res, Direcao dir) {
+        if (res == ResultadoCombate.PERDEU) {
+            jogando = false;
+            janela.mostrarDerrota();
+            atualizar();
+            return;
+        }
+        if (res == ResultadoCombate.VENCEU) {
+            dinossauros.remove(d);
+            tabuleiro.atualizar(jogador, dinossauros, caixas);
+            if (dir != null && dir != Direcao.INVALIDA) {
+                jogador.mover(dir, tabuleiro);
+            }
+            if (dinossauros.isEmpty()) {
+                msg("Você venceu!");
+                janela.mostrarVitoria();
+            }
+        }
+        atualizar();
+    }
+
+    private void prepararPartida() {
         tabuleiro.atualizar(jogador, dinossauros, caixas);
         tabuleiro.salvarPosicoes();
-        salvarEstadoInicial();
-    }
-
-    private void salvarEstadoInicial() {
         jogadorInicial = jogador.copia();
-        dinossaurosIniciais = new ArrayList<>();
-        for (Dinossauro d : dinossauros) dinossaurosIniciais.add(d.copia());
+        dinosIniciais = new ArrayList<>();
+        for (Dinossauro d : dinossauros) dinosIniciais.add(d.copia());
         caixasIniciais = new ArrayList<>();
         for (Caixa c : caixas) caixasIniciais.add(c.copia());
     }
 
-    private void processarResultadoMovimento(ResultadoMovimento resMovimento, Direcao direcao) {
-        if (resMovimento == ResultadoMovimento.ENCONTROU_CAIXA) {
-            processarCaixa(direcao);
-        } else if (resMovimento != ResultadoMovimento.LIVRE &&
-                resMovimento != ResultadoMovimento.BLOQUEADO) {
-            processarCombate(direcao);
-        }
-    }
-
-    private void processarCaixa(Direcao direcao) {
-        Caixa caixaEncontrada = null;
+    private void abrirCaixa() {
         for (Caixa c : caixas) {
             if (c.getPosicaoX() == jogador.getPosicaoX() && c.getPosicaoY() == jogador.getPosicaoY()) {
-                caixaEncontrada = c;
-                break;
-            }
-        }
-        if (caixaEncontrada == null) return;
-
-        if (caixaEncontrada.getItem() != null) {
-            Item item = caixaEncontrada.getItem();
-            jogador.receberItem(item);
-            notificar("Você encontrou " + item.getNome());
-            caixas.remove(caixaEncontrada);
-        } else {
-            Compsognato surpresa = caixaEncontrada.getCompsognato();
-            caixas.remove(caixaEncontrada);
-            surpresa.setPosicaoX(jogador.getPosicaoX());
-            surpresa.setPosicaoY(jogador.getPosicaoY());
-            dinossauros.add(surpresa);
-            notificar("Cuidado! Um compsognato estava atrás da caixa!");
-            iniciarCombate(surpresa, true, null);
-        }
-    }
-
-    private void processarCombate(Direcao direcao) {
-        for (Dinossauro d : dinossauros) {
-            if (d.getPosicaoX() != jogador.getPosicaoX() + direcao.dx ||
-                    d.getPosicaoY() != jogador.getPosicaoY() + direcao.dy) continue;
-            iniciarCombate(d, false, direcao);
-            return;
-        }
-    }
-
-    private void iniciarCombate(Dinossauro d, boolean dinoAtacouPrimeiro, Direcao direcao) {
-        if (dinoAtacouPrimeiro) {
-            boolean desviou = sistemaCombate.passouTestePercepcao(jogador);
-            if (!desviou) {
-                jogador.setSaude(jogador.getSaude() - d.getDanoAtaque());
-                notificar("O dinossauro te atacou! -" + d.getDanoAtaque() + " de saúde.");
-                if (jogador.getSaude() <= 0) {
-                    notificar("Você MORREU!");
-                    partidaAtiva = false;
-                    if (listener != null) listener.onDerrota();
-                    return;
+                if (c.getItem() != null) {
+                    jogador.receberItem(c.getItem());
+                    msg("Achou: " + c.getItem().getNome());
+                    caixas.remove(c);
+                } else {
+                    Compsognato surpresa = c.getCompsognato();
+                    caixas.remove(c);
+                    surpresa.setPosicaoX(jogador.getPosicaoX());
+                    surpresa.setPosicaoY(jogador.getPosicaoY());
+                    dinossauros.add(surpresa);
+                    msg("Compsognato surpresa!");
+                    atacarPrimeiro(surpresa);
+                    janela.abrirCombate(surpresa, null);
                 }
-            } else {
-                notificar("Você desviou do ataque inicial!");
-            }
-        }
-        if (listener != null) {
-            listener.onCombateIniciado(d, dinoAtacouPrimeiro, direcao);
-        }
-    }
-
-    private void moverDinossauros() {
-        for (Dinossauro d : new ArrayList<>(dinossauros)) {
-            boolean encontrouJogador = d.mover(jogador, tabuleiro, random);
-            tabuleiro.atualizar(jogador, dinossauros, caixas);
-
-            if (encontrouJogador) {
-                notificar("Um " + d.getClass().getSimpleName() + " te encontrou!");
-                iniciarCombate(d, true, null);
                 return;
             }
         }
     }
 
-    private void notificarMovimento(ResultadoMovimento resultado) {
-        String msg = switch (resultado) {
-            case BLOQUEADO -> "Movimento não permitido";
-            case ENCONTROU_COMPSOGNATO -> "Encontrou compsognato!";
-            case ENCONTROU_TROODONTE -> "Encontrou troodonte!";
-            case ENCONTROU_VELOCIRAPTOR -> "Encontrou velociraptor!";
-            case ENCONTROU_TREX -> "Encontrou Tiranossauro Rex!";
-            default -> null;
-        };
-        if (msg != null) notificar(msg);
+    private void combater(Direcao dir) {
+        for (Dinossauro d : dinossauros) {
+            if (d.getPosicaoX() == jogador.getPosicaoX() + dir.dx &&
+                d.getPosicaoY() == jogador.getPosicaoY() + dir.dy) {
+                janela.abrirCombate(d, dir);
+                return;
+            }
+        }
     }
 
-    private void notificar(String mensagem) {
-        if (listener != null) listener.onMensagem(mensagem);
+    private void moverDinos() {
+        for (Dinossauro d : new ArrayList<>(dinossauros)) {
+            if (d.mover(jogador, tabuleiro, random)) {
+                tabuleiro.atualizar(jogador, dinossauros, caixas);
+                msg("Um dinossauro te achou!");
+                atacarPrimeiro(d);
+                janela.abrirCombate(d, null);
+                return;
+            }
+            tabuleiro.atualizar(jogador, dinossauros, caixas);
+        }
     }
 
-    private void notificarAlteracao() {
-        if (listener != null) listener.onEstadoAlterado();
+    private void atacarPrimeiro(Dinossauro d) {
+        if (!combate.passouTestePercepcao(jogador)) {
+            jogador.setSaude(jogador.getSaude() - d.getDanoAtaque());
+            msg("Ataque surpresa! -" + d.getDanoAtaque() + " HP");
+            if (jogador.getSaude() <= 0) {
+                jogando = false;
+                janela.mostrarDerrota();
+            }
+        } else {
+            msg("Desviou do ataque!");
+        }
+    }
+
+    private void msg(String texto) {
+        if (janela != null) janela.mostrarMensagem(texto);
+    }
+
+    private void atualizar() {
+        if (janela != null) janela.atualizarTela();
     }
 }

@@ -12,72 +12,61 @@ public class PainelTabuleiro extends JPanel {
 
     private Tabuleiro tabuleiro;
     private Jogador jogador;
-    private boolean debugMode;
+    private boolean debug;
 
     public PainelTabuleiro() {
-        setBackground(new Color(50, 50, 50));
         setPreferredSize(new Dimension(500, 500));
+        setBackground(Color.BLACK);
     }
 
-    public void atualizar(Tabuleiro tabuleiro, Jogador jogador, boolean debugMode) {
+    public void setDados(Tabuleiro tabuleiro, Jogador jogador, boolean debug) {
         this.tabuleiro = tabuleiro;
         this.jogador = jogador;
-        this.debugMode = debugMode;
+        this.debug = debug;
         repaint();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (tabuleiro == null || jogador == null) {
-            desenharPlaceholder((Graphics2D) g);
-            return;
-        }
 
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        if (tabuleiro == null || jogador == null) return;
 
-        int dim = tabuleiro.getDimensao();
-        int tamanho = Math.min(getWidth(), getHeight()) / dim;
-        int offsetX = (getWidth() - tamanho * dim) / 2;
-        int offsetY = (getHeight() - tamanho * dim) / 2;
+        int tam = Math.min(getWidth(), getHeight()) / tabuleiro.getDimensao();
+        int offX = (getWidth() - tam * tabuleiro.getDimensao()) / 2;
+        int offY = (getHeight() - tam * tabuleiro.getDimensao()) / 2;
 
-        boolean[][] visivel = debugMode ? null : tabuleiro.calcularVisibilidade(jogador);
+        boolean[][] visivel = debug ? null : tabuleiro.calcularVisibilidade(jogador);
 
-        for (int x = 0; x < dim; x++) {
-            for (int y = 0; y < dim; y++) {
-                int px = offsetX + y * tamanho;
-                int py = offsetY + x * tamanho;
+        for (int x = 0; x < tabuleiro.getDimensao(); x++) {
+            for (int y = 0; y < tabuleiro.getDimensao(); y++) {
+                int px = offX + y * tam;
+                int py = offY + x * tam;
 
-                if (!debugMode && visivel != null && !visivel[x][y]) {
-                    CarregadorImagens.desenharCelula(g2, px, py, tamanho,
-                            CarregadorImagens.corFundo('+'), '+', Color.GRAY);
-                    continue;
-                }
-
-                Entidade entidade = tabuleiro.getEntidade(x, y);
                 char simbolo;
-                if (entidade != null) {
-                    simbolo = entidade.getSimbolo();
-                    if (simbolo == Macros.SIMB_PAREDE) simbolo = '#';
+                if (!debug && visivel != null && !visivel[x][y]) {
+                    simbolo = '+';
                 } else {
-                    simbolo = '.';
+                    Entidade e = tabuleiro.getEntidade(x, y);
+                    if (e == null) simbolo = '.';
+                    else if (e.getSimbolo() == Macros.SIMB_PAREDE) simbolo = '#';
+                    else simbolo = e.getSimbolo();
                 }
 
-                CarregadorImagens.desenharCelula(g2, px, py, tamanho,
-                        CarregadorImagens.corFundo(simbolo), simbolo,
-                        CarregadorImagens.corLetra(simbolo));
+                g.setColor(CarregadorImagens.corFundo(simbolo));
+                g.fillRect(px, py, tam, tam);
+                g.setColor(Color.BLACK);
+                g.drawRect(px, py, tam, tam);
+
+                Image img = CarregadorImagens.carregar(simbolo);
+                if (img != null) {
+                    g.drawImage(img, px, py, tam, tam, this);
+                } else {
+                    g.setColor(Color.WHITE);
+                    g.setFont(new Font("Arial", Font.BOLD, tam / 2));
+                    g.drawString(String.valueOf(simbolo), px + tam / 3, py + tam * 2 / 3);
+                }
             }
         }
-    }
-
-    private void desenharPlaceholder(Graphics2D g2) {
-        g2.setColor(Color.DARK_GRAY);
-        g2.fillRect(0, 0, getWidth(), getHeight());
-        g2.setColor(Color.LIGHT_GRAY);
-        g2.setFont(new Font("SansSerif", Font.ITALIC, 16));
-        String msg = "Inicie ou carregue uma partida";
-        FontMetrics fm = g2.getFontMetrics();
-        g2.drawString(msg, (getWidth() - fm.stringWidth(msg)) / 2, getHeight() / 2);
     }
 }

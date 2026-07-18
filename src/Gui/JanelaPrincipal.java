@@ -1,190 +1,186 @@
 package Gui;
 
 import Entidades.Personagens.Dinossauros.Dinossauro;
+import Itens.Item;
 import Util.Direcao;
+import Util.Macros;
 import Util.ResultadoCombate;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class JanelaPrincipal extends JFrame implements ControladorGUI.Listener {
+public class JanelaPrincipal extends JFrame {
 
-    private final ControladorGUI controlador;
-    private final PainelTabuleiro painelTabuleiro;
-    private final PainelStatus painelStatus;
-    private final PainelControles painelControles;
-    private final JTextArea areaMensagens;
-    private final JLabel lblDebug;
+    private ControladorGUI jogo;
+    private PainelTabuleiro tabuleiro;
+    private JLabel lblSaude;
+    private JProgressBar barraSaude;
+    private DefaultListModel<String> listaItens;
+    private JTextArea mensagens;
 
     public JanelaPrincipal() {
         super("Jurassic - Aventura");
-        controlador = new ControladorGUI();
-        controlador.setListener(this);
+        jogo = new ControladorGUI();
+        jogo.setJanela(this);
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout(4, 4));
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
 
-        criarMenuBar();
-
-        painelTabuleiro = new PainelTabuleiro();
-        painelStatus = new PainelStatus();
-        painelControles = new PainelControles();
-
-        painelControles.setListener(new PainelControles.AcaoListener() {
-            @Override
-            public void onMover(Direcao direcao) {
-                controlador.mover(direcao);
-            }
-
-            @Override
-            public void onCurar() {
-                controlador.curar();
-            }
-        });
-
-        JPanel painelLateral = new JPanel(new BorderLayout(0, 8));
-        painelLateral.setBackground(new Color(210, 180, 140));
-        painelLateral.add(painelStatus, BorderLayout.CENTER);
-        painelLateral.add(painelControles, BorderLayout.SOUTH);
-
-        add(painelTabuleiro, BorderLayout.CENTER);
-        add(painelLateral, BorderLayout.EAST);
-
-        areaMensagens = new JTextArea(3, 40);
-        areaMensagens.setEditable(false);
-        areaMensagens.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        areaMensagens.setLineWrap(true);
-        areaMensagens.setWrapStyleWord(true);
-        areaMensagens.setBackground(new Color(245, 235, 220));
-        JScrollPane scrollMensagens = new JScrollPane(areaMensagens);
-        scrollMensagens.setBorder(BorderFactory.createTitledBorder("Mensagens"));
-
-        lblDebug = new JLabel(" ");
-        lblDebug.setFont(new Font("SansSerif", Font.BOLD, 12));
-        lblDebug.setForeground(new Color(180, 0, 0));
-        lblDebug.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
-
-        JPanel painelInferior = new JPanel(new BorderLayout());
-        painelInferior.add(lblDebug, BorderLayout.NORTH);
-        painelInferior.add(scrollMensagens, BorderLayout.CENTER);
-        add(painelInferior, BorderLayout.SOUTH);
-
+        criarMenu();
+        criarTela();
         pack();
-        setMinimumSize(new Dimension(780, 620));
+        setMinimumSize(new Dimension(750, 600));
         setLocationRelativeTo(null);
 
-        SwingUtilities.invokeLater(this::mostrarDialogoInicio);
+        perguntarNovoJogo();
     }
 
-    private void criarMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
+    private void criarMenu() {
+        JMenuBar barra = new JMenuBar();
 
-        JMenu menuArquivo = new JMenu("Arquivo");
-        JMenuItem itemSalvar = new JMenuItem("Salvar");
-        itemSalvar.addActionListener(e -> controlador.salvarJogo());
-        JMenuItem itemCarregar = new JMenuItem("Carregar Jogo");
-        itemCarregar.addActionListener(e -> controlador.carregarJogo());
-        JMenuItem itemSair = new JMenuItem("Saída");
-        itemSair.addActionListener(e -> sair());
-        menuArquivo.add(itemSalvar);
-        menuArquivo.add(itemCarregar);
-        menuArquivo.addSeparator();
-        menuArquivo.add(itemSair);
+        JMenu arquivo = new JMenu("Arquivo");
+        JMenuItem salvar = new JMenuItem("Salvar");
+        salvar.addActionListener(e -> jogo.salvar());
+        JMenuItem carregar = new JMenuItem("Carregar Jogo");
+        carregar.addActionListener(e -> jogo.carregar());
+        JMenuItem sair = new JMenuItem("Saída");
+        sair.addActionListener(e -> System.exit(0));
+        arquivo.add(salvar);
+        arquivo.add(carregar);
+        arquivo.add(sair);
 
         JMenu menuJogo = new JMenu("Jogo");
-        JMenuItem itemNovo = new JMenuItem("Novo Jogo");
-        itemNovo.addActionListener(e -> mostrarDialogoInicio());
-        JMenuItem itemReiniciar = new JMenuItem("Reiniciar");
-        itemReiniciar.addActionListener(e -> controlador.reiniciarPartida());
-        JMenuItem itemDebug = new JMenuItem("Modo Debug");
-        itemDebug.addActionListener(e -> controlador.alternarDebugMode());
-        menuJogo.add(itemNovo);
-        menuJogo.add(itemReiniciar);
-        menuJogo.add(itemDebug);
+        JMenuItem novo = new JMenuItem("Novo Jogo");
+        novo.addActionListener(e -> perguntarNovoJogo());
+        JMenuItem reiniciar = new JMenuItem("Reiniciar");
+        reiniciar.addActionListener(e -> jogo.reiniciar());
+        JMenuItem debug = new JMenuItem("Modo Debug");
+        debug.addActionListener(e -> jogo.toggleDebug());
+        menuJogo.add(novo);
+        menuJogo.add(reiniciar);
+        menuJogo.add(debug);
 
-        menuBar.add(menuArquivo);
-        menuBar.add(menuJogo);
-        setJMenuBar(menuBar);
+        barra.add(arquivo);
+        barra.add(menuJogo);
+        setJMenuBar(barra);
     }
 
-    private void mostrarDialogoInicio() {
-        DialogoInicio dialogo = new DialogoInicio(this);
-        dialogo.setVisible(true);
-        if (dialogo.isConfirmado()) {
-            controlador.iniciarNovoJogo(dialogo.getDificuldade(), dialogo.getMapa());
-        }
+    private void criarTela() {
+        // tabuleiro no centro
+        tabuleiro = new PainelTabuleiro();
+        add(tabuleiro, BorderLayout.CENTER);
+
+        // painel lateral direito
+        JPanel lateral = new JPanel();
+        lateral.setLayout(new BoxLayout(lateral, BoxLayout.Y_AXIS));
+        lateral.setBackground(new Color(210, 180, 140));
+        lateral.setPreferredSize(new Dimension(200, 500));
+        lateral.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel titulo = new JLabel("Status do personagem");
+        titulo.setFont(new Font("Arial", Font.BOLD, 14));
+        lateral.add(titulo);
+        lateral.add(Box.createVerticalStrut(10));
+
+        lblSaude = new JLabel("saúde: 0/5");
+        lblSaude.setForeground(Color.RED);
+        lateral.add(lblSaude);
+
+        barraSaude = new JProgressBar(0, Macros.SAUDE_JOGADOR);
+        barraSaude.setForeground(Color.RED);
+        barraSaude.setMaximumSize(new Dimension(200, 25));
+        lateral.add(barraSaude);
+        lateral.add(Box.createVerticalStrut(15));
+
+        lateral.add(new JLabel("inventario"));
+        listaItens = new DefaultListModel<>();
+        JList<String> lista = new JList<>(listaItens);
+        JScrollPane scrollInv = new JScrollPane(lista);
+        scrollInv.setPreferredSize(new Dimension(180, 120));
+        lateral.add(scrollInv);
+        lateral.add(Box.createVerticalStrut(15));
+
+        // botoes de movimento
+        lateral.add(new JLabel("Movimento"));
+        lateral.add(criarBotao("↑", Direcao.CIMA));
+        JPanel meio = new JPanel(new FlowLayout());
+        meio.setBackground(new Color(210, 180, 140));
+        meio.add(criarBotao("←", Direcao.ESQUERDA));
+        meio.add(criarBotao("→", Direcao.DIREITA));
+        lateral.add(meio);
+        lateral.add(criarBotao("↓", Direcao.BAIXO));
+
+        JButton btnCurar = new JButton("Kit médico");
+        btnCurar.addActionListener(e -> jogo.curar());
+        lateral.add(Box.createVerticalStrut(10));
+        lateral.add(btnCurar);
+
+        add(lateral, BorderLayout.EAST);
+
+        // mensagens embaixo
+        mensagens = new JTextArea(3, 40);
+        mensagens.setEditable(false);
+        add(new JScrollPane(mensagens), BorderLayout.SOUTH);
     }
 
-    private void sair() {
-        int opcao = JOptionPane.showConfirmDialog(this,
-                "Deseja realmente sair?",
-                "Saída",
-                JOptionPane.YES_NO_OPTION);
-        if (opcao == JOptionPane.YES_OPTION) {
-            dispose();
-            System.exit(0);
-        }
+    private JButton criarBotao(String texto, Direcao dir) {
+        JButton btn = new JButton(texto);
+        btn.addActionListener(e -> jogo.mover(dir));
+        return btn;
     }
 
-    private void atualizarInterface() {
-        painelTabuleiro.atualizar(
-                controlador.getTabuleiro(),
-                controlador.getJogador(),
-                controlador.isDebugMode()
-        );
-        painelStatus.atualizar(controlador.getJogador());
-        lblDebug.setText(controlador.isDebugMode() ? " [MODO DEBUG ATIVO] " : " ");
+    private void perguntarNovoJogo() {
+        String[] difs = {"Fácil", "Médio", "Difícil"};
+        String[] mapas = {"Mapa 1", "Mapa 2", "Mapa 3", "Mapa 4", "Mapa 5"};
+
+        int dif = JOptionPane.showOptionDialog(this, "Dificuldade:", "Novo Jogo",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                null, difs, difs[0]) + 1;
+
+        if (dif == 0) return;
+
+        int mapa = JOptionPane.showOptionDialog(this, "Mapa:", "Novo Jogo",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                null, mapas, mapas[0]) + 1;
+
+        if (mapa == 0) return;
+
+        jogo.novoJogo(dif, mapa);
     }
 
-    @Override
-    public void onEstadoAlterado() {
-        SwingUtilities.invokeLater(this::atualizarInterface);
-    }
+    public void atualizarTela() {
+        tabuleiro.setDados(jogo.getTabuleiro(), jogo.getJogador(), jogo.isDebug());
 
-    @Override
-    public void onMensagem(String mensagem) {
-        SwingUtilities.invokeLater(() -> {
-            areaMensagens.append(mensagem + "\n");
-            areaMensagens.setCaretPosition(areaMensagens.getDocument().getLength());
-        });
-    }
+        if (jogo.getJogador() != null) {
+            int hp = Math.max(0, jogo.getJogador().getSaude());
+            lblSaude.setText("saúde: " + hp + "/" + Macros.SAUDE_JOGADOR);
+            barraSaude.setValue(hp);
 
-    @Override
-    public void onCombateIniciado(Dinossauro dinossauro, boolean dinoAtacouPrimeiro, Direcao direcaoMovimento) {
-        DialogoCombate dialogo = new DialogoCombate(
-                this,
-                controlador.getJogador(),
-                dinossauro,
-                controlador.getSistemaCombate(),
-                controlador.getTabuleiro()
-        );
-        ResultadoCombate resultado = dialogo.aguardarResultado();
-        controlador.processarResultadoCombate(dinossauro, resultado, direcaoMovimento);
-    }
-
-    @Override
-    public void onVitoria() {
-        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this,
-                "Você EXTINGUIU os dinossauros!",
-                "Vitória!",
-                JOptionPane.INFORMATION_MESSAGE));
-    }
-
-    @Override
-    public void onDerrota() {
-        SwingUtilities.invokeLater(() -> {
-            int opcao = JOptionPane.showConfirmDialog(this,
-                    "Você MORREU! Deseja reiniciar a partida?",
-                    "Derrota",
-                    JOptionPane.YES_NO_OPTION);
-            if (opcao == JOptionPane.YES_OPTION) {
-                controlador.reiniciarPartida();
+            listaItens.clear();
+            for (Item item : jogo.getJogador().getInventario().getItens()) {
+                listaItens.addElement(item.getNome());
             }
-        });
+        }
     }
 
-    @Override
-    public void onPartidaCarregada() {
-        // estado já atualizado pelo controlador
+    public void mostrarMensagem(String msg) {
+        mensagens.append(msg + "\n");
+    }
+
+    public void abrirCombate(Dinossauro dino, Direcao dir) {
+        DialogoCombate dialogo = new DialogoCombate(this, jogo.getJogador(), dino,
+                jogo.getCombate(), jogo.getTabuleiro());
+        ResultadoCombate res = dialogo.getResultado();
+        jogo.fimCombate(dino, res, dir);
+    }
+
+    public void mostrarVitoria() {
+        JOptionPane.showMessageDialog(this, "Você venceu!", "Vitória", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public void mostrarDerrota() {
+        int r = JOptionPane.showConfirmDialog(this, "Você morreu! Reiniciar?",
+                "Derrota", JOptionPane.YES_NO_OPTION);
+        if (r == JOptionPane.YES_OPTION) jogo.reiniciar();
     }
 }
