@@ -90,11 +90,17 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
         lateral.setPreferredSize(new Dimension(200, 500));
         lateral.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        lateral.add(new JLabel("Status do personagem"));
+        JLabel titulo = new JLabel("Status do personagem");
+        titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        titulo.setFont(new Font("Arial", Font.BOLD, 16));
+
+        lateral.add(titulo);
         lateral.add(Box.createVerticalStrut(10));
 
         lblSaude = new JLabel("saúde: 0/5");
         lblSaude.setForeground(Color.RED);
+        lblSaude.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblSaude.setFont(new Font("Arial", Font.BOLD, 12));
         lateral.add(lblSaude);
 
         barraSaude = new JProgressBar(0, Macros.SAUDE_JOGADOR);
@@ -103,19 +109,14 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
         lateral.add(barraSaude);
         lateral.add(Box.createVerticalStrut(15));
 
-        lateral.add(new JLabel("inventario"));
+        JLabel inventario = new JLabel("inventario");
+        inventario.setAlignmentX(Component.CENTER_ALIGNMENT);
+        inventario.setFont(new Font("Arial", Font.BOLD, 14));
+        lateral.add(inventario);
         listaItens = new DefaultListModel<>();
         lateral.add(new JScrollPane(new JList<>(listaItens)));
         lateral.add(Box.createVerticalStrut(15));
 
-        lateral.add(new JLabel("Movimento (WASD)"));
-        lateral.add(criarBotaoMovimento("↑ / W", Direcao.CIMA));
-        JPanel meio = new JPanel(new FlowLayout());
-        meio.setBackground(new Color(210, 180, 140));
-        meio.add(criarBotaoMovimento("← / A", Direcao.ESQUERDA));
-        meio.add(criarBotaoMovimento("→ / D", Direcao.DIREITA));
-        lateral.add(meio);
-        lateral.add(criarBotaoMovimento("↓ / S", Direcao.BAIXO));
 
         JButton btnCurar = new JButton("Kit médico");
         btnCurar.setFocusable(false);
@@ -162,12 +163,6 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
         });
     }
 
-    private JButton criarBotaoMovimento(String texto, Direcao dir) {
-        JButton btn = new JButton(texto);
-        btn.setFocusable(false); // para o teclado continuar na janela
-        btn.addActionListener(e -> new ThreadJogador(jogo, dir).start());
-        return btn;
-    }
 
     private void executar(Runnable acao) {
         new Thread(() -> {
