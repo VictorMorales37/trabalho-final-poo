@@ -436,20 +436,29 @@ public class Jogo {
 
     private void salvarEstadoInicial() {
         jogadorInicial = jogador.copia();
-        dinossaurosIniciais = new ArrayList<>();
-        for (Dinossauro d : dinossauros) dinossaurosIniciais.add(d.copia());
-        caixasIniciais = new ArrayList<>();
-        for (Caixa c : caixas) caixasIniciais.add(c.copia());
+        dinossaurosIniciais = copiarLista(dinossauros);
+        caixasIniciais = copiarLista(caixas);
     }
 
     private void reiniciarPartidaInterno() {
         jogador = jogadorInicial.copia();
         dinossauros.clear();
-        for (Dinossauro d : dinossaurosIniciais) dinossauros.add(d.copia());
+        dinossauros.addAll(copiarLista(dinossaurosIniciais));
         caixas.clear();
-        for (Caixa c : caixasIniciais) caixas.add(c.copia());
+        caixas.addAll(copiarLista(caixasIniciais));
         tabuleiro.setGrid(tabuleiro.getPosicoesIniciais());
         tabuleiro.atualizar(jogador, dinossauros, caixas);
+    }
+
+    /**
+     * Produz uma cópia profunda de cada elemento da lista, usando o
+     * contrato {@link Copiavel}. Evita duplicar o mesmo laço para
+     * dinossauros, caixas e qualquer outra entidade copiável no futuro.
+     */
+    private <T extends Copiavel<T>> ArrayList<T> copiarLista(ArrayList<T> lista) {
+        ArrayList<T> copia = new ArrayList<>();
+        for (T item : lista) copia.add(item.copia());
+        return copia;
     }
 
     private void loopMovimento() {

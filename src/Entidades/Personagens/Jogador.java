@@ -7,8 +7,9 @@ import Util.Direcao;
 import Util.ResultadoMovimento;
 import Sistema.Tabuleiro;
 import Util.Macros;
+import Util.Copiavel;
 
-public class Jogador extends Personagem {
+public class Jogador extends Personagem implements Copiavel<Jogador> {
     private int percepcao;
     private Inventario inventario;
 
@@ -21,6 +22,7 @@ public class Jogador extends Personagem {
         this.receberItem(new ArmaDardos());
     }
 
+    @Override
     public Jogador copia() {
         Jogador j = new Jogador(this.simbolo, saude, percepcao);
         j.setPosicaoX(posicaoX);

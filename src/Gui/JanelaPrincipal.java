@@ -173,18 +173,13 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
 
     private void perguntarNovoJogo() {
         String[] difs = {"Fácil", "Médio", "Difícil"};
-        String[] mapas = {"Mapa 1", "Mapa 2", "Mapa 3", "Mapa 4", "Mapa 5"};
 
         int dif = JOptionPane.showOptionDialog(this, "Dificuldade:", "Novo Jogo",
                 JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
                 null, difs, difs[0]) + 1;
         if (dif == 0) return;
 
-        int mapa = JOptionPane.showOptionDialog(this, "Mapa:", "Novo Jogo",
-                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
-                null, mapas, mapas[0]) + 1;
-        if (mapa == 0) return;
-
+        int mapa = jogo.random.nextInt(Macros.NUM_MAPAS) + 1;
         jogo.iniciarNovoJogo(dif, mapa);
         requestFocusInWindow();
     }

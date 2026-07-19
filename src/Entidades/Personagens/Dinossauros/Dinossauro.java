@@ -5,11 +5,12 @@ import Entidades.Personagens.Personagem;
 import Util.Macros;
 import Util.Direcao;
 import Util.ResultadoMovimento;
+import Util.Copiavel;
 import Sistema.Tabuleiro;
 
 import java.util.Random;
 
-public abstract class Dinossauro extends Personagem {
+public abstract class Dinossauro extends Personagem implements Copiavel<Dinossauro> {
 
     protected int velocidade;
 
@@ -18,6 +19,7 @@ public abstract class Dinossauro extends Personagem {
         this.velocidade = velocidade;
     }
 
+    @Override
     public abstract Dinossauro copia();
 
     @Override

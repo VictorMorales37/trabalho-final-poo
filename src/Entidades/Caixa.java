@@ -3,8 +3,9 @@ package Entidades;
 import Entidades.Personagens.Dinossauros.Compsognato;
 import Itens.Item;
 import Util.Macros;
+import Util.Copiavel;
 
-public class Caixa extends Entidade {
+public class Caixa extends Entidade implements Copiavel<Caixa> {
     private Item item;
     private Compsognato compsognato;
 
@@ -28,6 +29,7 @@ public class Caixa extends Entidade {
         return compsognato;
     }
 
+    @Override
     public Caixa copia() {
         Caixa c;
         if (item != null) {
