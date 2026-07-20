@@ -54,7 +54,7 @@ public class SistemaCombate {
             if (input == 4) {
                 Item kit = jogador.pegarItem(KitMedico.class);
                 if (kit == null) continue; // botão desabilitado na GUI
-                kit.usar(jogador, dino);
+                kit.usar(jogador, dino, menu);
                 if (kit instanceof Consumivel && ((Consumivel) kit).consumidoAposUso()) {
                     jogador.removerItem(kit);
                 }
@@ -66,11 +66,11 @@ public class SistemaCombate {
                 } else if (input == 2) {
                     Item bastao = jogador.pegarItem(Bastao.class);
                     if (bastao == null) continue;
-                    dano = bastao.usar(jogador, dino);
+                    dano = bastao.usar(jogador, dino, menu);
                 } else if (input == 3) {
                     Item arma = jogador.pegarItem(ArmaDardos.class);
                     if (arma == null) continue;
-                    dano = arma.usar(jogador, dino);
+                    dano = arma.usar(jogador, dino, menu);
                 } else {
                     continue;
                 }

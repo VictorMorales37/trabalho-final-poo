@@ -3,6 +3,7 @@ package Itens.Consumiveis;
 import Entidades.Personagens.Dinossauros.Dinossauro;
 import Entidades.Personagens.Jogador;
 import Itens.Item;
+import Sistema.Menu;
 import Util.Macros;
 
 public class KitMedico extends Item implements Consumivel {
@@ -12,9 +13,9 @@ public class KitMedico extends Item implements Consumivel {
     }
 
     @Override
-    public int usar(Jogador jogador, Dinossauro dino) {
+    public int usar(Jogador jogador, Dinossauro dino, Menu menu) {
         jogador.receberCura(Macros.CURA);
-        System.out.println("Você usou o kit médico e recuperou vida.");
+        menu.mensagem("Você usou o kit médico e recuperou vida.");
         return 0;
     }
 

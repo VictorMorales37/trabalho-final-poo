@@ -3,6 +3,7 @@ package Itens;
 import Entidades.Personagens.Dinossauros.Dinossauro;
 import Entidades.Personagens.Jogador;
 import Itens.Consumiveis.MunicaoDardos;
+import Sistema.Menu;
 import Util.Macros;
 
 public class ArmaDardos extends Item {
@@ -13,15 +14,15 @@ public class ArmaDardos extends Item {
     }
 
     @Override
-    public int usar(Jogador jogador, Dinossauro dino) {
+    public int usar(Jogador jogador, Dinossauro dino, Menu menu) {
         if (!dino.podeSerAtacadoComDardos()) {
-            System.out.println("O Velociraptor é ágil demais para os dardos!");
+            menu.mensagem("O Velociraptor é ágil demais para os dardos!");
             return 0;
         }
 
         Item municao = jogador.pegarItem(MunicaoDardos.class);
         if (municao == null) {
-            System.out.println("Você não tem munição de dardos!");
+            menu.mensagem("Você não tem munição de dardos!");
             return 0;
         }
 

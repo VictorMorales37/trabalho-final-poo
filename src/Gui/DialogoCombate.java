@@ -80,6 +80,10 @@ public class DialogoCombate extends JDialog {
     }
 
     public void atualizarHp(Jogador j) {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(() -> atualizarHp(j));
+            return;
+        }
         lblJogador.setText("Jogador: " + j.getSaude() + "/" + Macros.SAUDE_JOGADOR);
         lblDino.setText("Dino: " + dino.getSaude());
         atualizarBotoes();

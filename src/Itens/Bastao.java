@@ -2,6 +2,7 @@ package Itens;
 
 import Entidades.Personagens.Dinossauros.Dinossauro;
 import Entidades.Personagens.Jogador;
+import Sistema.Menu;
 
 import java.util.Random;
 
@@ -18,7 +19,7 @@ public class Bastao extends Item {
     }
 
     @Override
-    public int usar(Jogador j,  Dinossauro dino) {
+    public int usar(Jogador j, Dinossauro dino, Menu menu) {
         int acerto = random.nextInt(6) + 1;
         if (acerto == 6){ // crítico
             return 2;
