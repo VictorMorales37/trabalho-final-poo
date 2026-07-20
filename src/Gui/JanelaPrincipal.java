@@ -134,10 +134,10 @@ public class JanelaPrincipal extends JFrame implements InterfaceGui {
         add(new JScrollPane(mensagens), BorderLayout.SOUTH);
     }
 
-    // WASD cria uma ThreadJogador para cada tecla
+    // WASD
     private void configurarTeclado() {
         setFocusable(true);
-        // KeyboardFocusManager pega as teclas mesmo se o foco não estiver na janela
+
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
             if (e.getID() != KeyEvent.KEY_PRESSED) return false;
             // não move durante combate

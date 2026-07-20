@@ -11,7 +11,7 @@ import Util.ResultadoMovimento;
 
 import java.util.ArrayList;
 
-// Responsável por combates, caixas, fuga e fim de jogo (vitória/derrota)
+// Responsável por combates, caixas, fuga e fim de jogo (vitória/derrota) -> retiramos parte disso da classe Jogo
 public class GerenciadorEncontros {
 
     private final SistemaCombate sistemaCombate;

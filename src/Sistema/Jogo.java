@@ -336,11 +336,6 @@ public class Jogo {
         tabuleiro.atualizar(jogador, dinossauros, caixas);
     }
 
-    /**
-     * Produz uma cópia profunda de cada elemento da lista, usando o
-     * contrato {@link Copiavel}. Evita duplicar o mesmo laço para
-     * dinossauros, caixas e qualquer outra entidade copiável no futuro.
-     */
     private <T extends Copiavel<T>> ArrayList<T> copiarLista(ArrayList<T> lista) {
         ArrayList<T> copia = new ArrayList<>();
         for (T item : lista) copia.add(item.copia());
