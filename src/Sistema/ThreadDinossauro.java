@@ -3,7 +3,6 @@ package Sistema;
 import Entidades.Personagens.Dinossauros.Dinossauro;
 import Entidades.Personagens.Dinossauros.Velociraptor;
 
-// Thread que move um dinossauro periodicamente
 public class ThreadDinossauro extends Thread {
 
     private final Jogo jogo;

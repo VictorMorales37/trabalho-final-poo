@@ -2,7 +2,6 @@ package Sistema;
 
 import Util.Direcao;
 
-// Thread simples para o movimento do jogador (WASD ou botões)
 public class ThreadJogador extends Thread {
 
     private final Jogo jogo;

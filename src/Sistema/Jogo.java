@@ -12,12 +12,6 @@ import Itens.Consumiveis.KitMedico;
 import Itens.Consumiveis.Consumivel;
 import Util.*;
 
-/**
- * Coordena a partida: movimento e ciclo de vida do jogo.
- * Combate/vitória/derrota/caixas ficam em GerenciadorEncontros;
- * estado (pausa, debug, cooldown) fica em EstadoExecucao;
- * threads em GerenciadorThreads; GUI na pasta Gui.
- */
 public class Jogo {
 
     public final Random random;
